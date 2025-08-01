@@ -13,55 +13,117 @@
             color: #c9d1d9;
         }
         .container {
-    max-width: 1000px;
-}
-.input-group input, .input-group textarea {
-    background-color: #21262d;
-    border-color: #30363d;
-    color: #c9d1d9;
-}
-.card {
-    background-color: #161b22;
-    border: 1px solid #30363d;
-}
-.results-container .card {
-    min-height: 150px;
-}
-.profit {
-    color: #34d399; /* Tailwind's emerald-400 */
-}
-.loss {
-    color: #f87171; /* Tailwind's red-400 */
-}
-.btn {
-    background-color: #30363d;
-    color: #c9d1d9;
-    border: 1px solid #444c56;
-    transition: all 0.2s;
-}
-.btn:hover {
-    background-color: #444c56;
-}
-.btn-primary {
-    background-color: #1a73e8;
-    color: #ffffff;
-    border: none;
-}
-.btn-primary:hover {
-    background-color: #1764c9;
-}
+            max-width: 1000px;
+        }
+        .input-group input, .input-group textarea {
+            background-color: #21262d;
+            border-color: #30363d;
+            color: #c9d1d9;
+        }
+        .card {
+            background-color: #161b22;
+            border: 1px solid #30363d;
+        }
+        .results-container .card {
+            min-height: 150px;
+        }
+        .profit {
+            color: #34d399; /* Tailwind's emerald-400 */
+        }
+        .loss {
+            color: #f87171; /* Tailwind's red-400 */
+        }
+        .btn {
+            background-color: #30363d;
+            color: #c9d1d9;
+            border: 1px solid #444c56;
+            transition: all 0.2s;
+        }
+        .btn:hover {
+            background-color: #444c56;
+        }
+        .btn-primary {
+            background-color: #1a73e8;
+            color: #ffffff;
+            border: none;
+        }
+        .btn-primary:hover {
+            background-color: #1764c9;
+        }
     </style>
 </head>
 <body class="p-6">
     <div class="container mx-auto">
         <h1 class="text-3xl font-bold mb-6 text-center text-white">WoW Ironpaw Token Profit Calculator</h1>
         
-        <!-- Instructions Section -->
+        <!-- Instructions Section - now structured with a visible and a collapsible part -->
         <div class="card p-4 rounded-lg shadow-lg mb-8">
             <h2 class="text-xl font-bold mb-2">Instructions</h2>
-            <p class="text-sm">
-                You can manually enter prices below or paste data from your Auctionator addon into the "Import Prices" box and click "Import". The prices will be converted from copper to gold automatically. The calculator will then show you the most profitable crafting path.
-            </p>
+
+            <!-- This div is for the new side-by-side layout on large screens -->
+            <div class="flex flex-col lg:flex-row items-center lg:items-start justify-between gap-4">
+                <!-- Descriptive paragraph -->
+                <p class="text-sm lg:w-1/2">
+                    This guide will walk you through the three key steps: creating your shopping list in-game, exporting the data, and using the calculator to find your profit.
+                </p>
+
+                <!-- The button and its text container, now aligned with the paragraph -->
+                <div class="flex flex-col items-center justify-center p-4 rounded-lg bg-[#21262d] mt-4 lg:mt-0 lg:w-1/2">
+                    <p class="text-sm text-center">
+                        Click the button below to copy the shopping list string
+                        for your Auctionator addon.
+                    </p>
+                    <button id="copy-search-string-btn" class="btn px-4 py-2 rounded-lg font-bold text-sm mt-4 w-full">Copy Auctionator Shopping List</button>
+                    <p id="import-status" class="text-xs text-center text-gray-400 mt-2"></p>
+                </div>
+            </div>
+
+            <!-- The collapsible section now contains the detailed steps -->
+            <details class="mt-4">
+                <summary class="cursor-pointer text-sm font-semibold text-blue-400 hover:underline">Click here for detailed instructions</summary>
+                <div class="space-y-4 pt-4">
+                    <div>
+                        <h4 class="font-bold mt-4 mb-1">Add the Shopping List to Auctionator in-game</h4>
+                        <p class="text-xs text-gray-400">This step gets all the relevant item prices from the auction house for you.</p>
+                        <ol class="list-decimal list-inside text-sm space-y-1 mt-2">
+                            <li>Open your AH.</li>
+                            <li>Go to the "Shopping" tab.</li>
+                            <li>While under "Shopping Lists" find the "Import" button. Click it.</li>
+                            <li>Paste the string you copied from the calculator into the import box.
+                                <span class="block">You now have a shopping list with all the necessary items!</span>
+                            </li>
+                        </ol>
+                    </div>
+
+                    <div>
+                        <h4 class="font-bold mt-4 mb-1">Export the Search Results from Auctionator</h4>
+                        <p class="text-xs text-gray-400">This step scans the auction house and gets the data you need.</p>
+                        <ol class="list-decimal list-inside text-sm mt-2 space-y-1">
+                            <li>In the AH, go to the "Shopping" tab.</li>
+                            <li>Select the shopping list you just created (e.g., "MoP Cooking").</li>
+                            <li>Auctionator is now scanning for the current prices for all the items on your list. This may take a few moments.</li>
+                            <li>Once the scan is complete, in the bottom right is a button labeled "Export Results". Click it.</li>
+                            <li>A window will pop up called "Copy Text". Click inside this box and copy all of the text.</li>
+                        </ol>
+                    </div>
+
+                    <div>
+                        <h4 class="font-bold mt-4 mb-1">Use the Calculator</h4>
+                        <p class="text-xs text-gray-400">This final step uses the data you've gathered to show you the best way to make a profit.</p>
+                        <ol class="list-decimal list-inside text-sm mt-2 space-y-1">
+                            <li>Find the "Import Prices" box.</li>
+                            <li>Paste the text you just copied from Auctionator into this box.</li>
+                            <li>Click the "Import Prices" button.</li>
+                        </ol>
+                        <p class="text-sm mt-2">The calculator will now automatically update with all the new data and show you two main results:</p>
+                        <ul class="list-disc list-inside text-sm mt-2 space-y-1 ml-4">
+                            <li><strong>Cheapest Token Cost:</strong> This tells you the item you should buy (and the total cost) to get a single Ironpaw Token for the least amount of gold.</li>
+                            <li><strong>Profit Analysis:</strong> This shows you which item is most valuable to buy with your token and what your potential profit is by reselling it on the auction house.</li>
+                        </ul>
+                        <p class="text-sm mt-2">You can now easily find the most profitable item and start earning gold!</p>
+                    </div>
+                </div>
+            </details>
         </div>
 
         <!-- Import Prices Section -->
@@ -71,17 +133,11 @@
                 <textarea id="import-box" class="w-full h-32 px-3 py-2 rounded-lg text-sm" placeholder="Paste your Auctionator data here..."></textarea>
                 <div class="flex flex-col justify-between">
                     <button id="import-btn" class="btn btn-primary px-4 py-2 rounded-lg font-bold mb-2">Import Prices</button>
-                    <!-- New button to copy the search string -->
-                    
                     <p class="text-sm text-gray-400 mt-2">
                         Expected format:<br>
                         "Price","Name","Item Level","Owned?","Available"<br>
                         ...
                     </p>
-                </div>
-                <div class="flex flex-col w-1/3">
-                    <button id="copy-search-string-btn" class="btn px-4 py-2 rounded-lg font-bold text-xs">Copy Auctionator Shopping List</button>
-                    <p id="import-status" class="text-xs text-center text-gray-400 mt-2"></p>
                 </div>
             </div>
         </div>
