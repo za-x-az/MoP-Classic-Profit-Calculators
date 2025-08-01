@@ -1,1 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ironpaw Token Profit Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0d1117;
+            color: #c9d1d9;
+        }
+        .container {
+            max-width: 1000px;
+        }
+        .input-group input, .input-group textarea {
+            background-color: #21262d;
+            border-color: #30363d;
+            color: #c9d1d9;
+        }
+        .card {
+            background-color: #161b22;
+            border: 1px solid #30363d;
+        }
+        .results-container .card {
+            min-height: 150px;
+        }
+        .profit {
+            color: #34d399; /* Tailwind's emerald-400 */
+        }
+        .loss {
+            color: #f87171; /* Tailwind's red-400 */
+        }
+        .btn {
+            background-color: #30363d;
+            color: #c9d1d9;
+            border: 1px solid #444c56;
+            transition: all 0.2s;
+        }
+        .btn:hover {
+            background-color: #444c56;
+        }
+        .btn-primary {
+            background-color: #1a73e8;
+            color: #ffffff;
+            border: none;
+        }
+        .btn-primary:hover {
+            background-color: #1764c9;
+        }
+    </style>
+</head>
+<body class="p-6">
+    <div class="container mx-auto">
+        <h1 class="text-3xl font-bold mb-6 text-center text-white">WoW Ironpaw Token Profit Calculator</h1>
+        
+        <!-- Instructions Section -->
+        <div class="card p-4 rounded-lg shadow-lg mb-8">
+            <h2 class="text-xl font-bold mb-2">Instructions</h2>
+            <p class="text-sm">
+                You can manually enter prices below or paste data from your Auctionator addon into the "Import Prices" box and click "Import". The prices will be converted from copper to gold automatically. The calculator will then show you the most profitable crafting path.
+            </p>
+        </div>
 
+        <!-- Import Prices Section -->
+        <div class="card p-6 rounded-lg shadow-lg mb-8">
+            <h2 class="text-2xl font-bold mb-4 text-white">Import Prices</h2>
+            <div class="grid md:grid-cols-2 gap-4">
+                <textarea id="import-box" class="w-full h-32 px-3 py-2 rounded-lg text-sm" placeholder="Paste your Auctionator data here..."></textarea>
+                <div class="flex flex-col justify-between">
+                    <button id="import-btn" class="btn btn-primary px-4 py-2 rounded-lg font-bold mb-2">Import Prices</button>
+                    <!-- New button to copy the search string -->
+                    <button id="copy-search-string-btn" class="btn px-4 py-2 rounded-lg font-bold">Copy Search String</button>
+                    <p id="import-status" class="text-xs text-center text-gray-400 mt-2"></p>
+                    <p class="text-sm text-gray-400 mt-2">
+                        Expected format:<br>
+                        "Price","Name","Item Level","Owned?","Available"<br>
+                        ...
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Fields -->
+        <div class="grid lg:grid-cols-2 gap-8 mb-8">
+            <!-- Food Items Input -->
+            <div class="card p-6 rounded-lg shadow-lg">
+                <h2 class="text-2xl font-bold mb-4 text-white">Food Item Prices (per item)</h2>
+                <div id="food-item-inputs" class="grid grid-cols-2 gap-4">
+                    <!-- Inputs and total cost displays will be generated here by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Cooking Ingredients Input -->
+            <div class="card p-6 rounded-lg shadow-lg">
+                <h2 class="text-2xl font-bold mb-4 text-white">Cooking Ingredient Prices (per item)</h2>
+                <div class="grid grid-cols-1 gap-4">
+                    <div class="input-group flex flex-col">
+                        <label for="price100YearSoySauce" class="mb-1 text-sm font-medium">100 Year Soy Sauce (AH Price):</label>
+                        <input type="number" id="price100YearSoySauce" class="px-3 py-2 rounded-lg" min="0" value="0">
+                    </div>
+                    <div class="input-group flex flex-col">
+                        <label for="priceRiceFlour" class="mb-1 text-sm font-medium">Rice Flour (AH Price):</label>
+                        <input type="number" id="priceRiceFlour" class="px-3 py-2 rounded-lg" min="0" value="0">
+                    </div>
+                    <div class="input-group flex flex-col">
+                        <label for="priceBlackPepper" class="mb-1 text-sm font-medium">Black Pepper (AH Price):</label>
+                        <input type="number" id="priceBlackPepper" class="px-3 py-2 rounded-lg" min="0" value="0">
+                    </div>
+                </div>
+                <p class="text-sm mt-4 text-gray-400">Note: One Ironpaw Token can be redeemed for one of these items.</p>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="results-container grid lg:grid-cols-2 gap-8">
+            <!-- Token Cost Analysis -->
+            <div class="card p-6 rounded-lg shadow-lg">
+                <h2 class="text-2xl font-bold mb-4 text-white">Ironpaw Token Cost Analysis</h2>
+                <div id="token-cost-results" class="space-y-2">
+                    <!-- Results will be generated here by JavaScript -->
+                    <p class="text-sm">Enter prices to see the cheapest way to acquire an Ironpaw Token.</p>
+                </div>
+            </div>
+
+            <!-- Profit Analysis -->
+            <div class="card p-6 rounded-lg shadow-lg">
+                <h2 class="text-2xl font-bold mb-4 text-white">Profit Analysis</h2>
+                <div id="profit-results" class="space-y-2">
+                    <!-- Results will be generated here by JavaScript -->
+                    <p class="text-sm">Enter prices to see the potential profit from reselling ingredients.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // The search string for the Auctionator addon
+        const searchString = 'MoP Cooking^"Raw Crocolisk Belly";;0;0;0;0;0;0;0;0;;#;;^"Emperor Salmon"^"Giant Mantis Shrimp"^"Golden Carp"^"Green Cabbage"^"Jade Lungfish"^"Jade Squash"^"Jewel Danio"^"Juicycrunch Carrot"^"Krasarang Paddlefish"^"Mogu Pumpkin"^"Mushan Ribs"^"Pink Turnip"^"Raw Crab Meat"^"Raw Tiger Steak"^"Raw Turtle Meat"^"Red Blossom Leek"^"Redbelly Mandarin"^"Reef Octopus"^"Scallions"^"Striped Melon"^"Tiger Gourami"^"White Turnip"^"Wildfowl Breast"^"Witchberries"^"100 Year Soy Sauce"^"Rice Flour"^"Black Pepper"';
+
+        // Data for food items and the quantity needed per Ironpaw Token
+        const foodItems = [
+            { name: "Crocolisk Belly", quantity: 20 },
+            { name: "Emperor Salmon", quantity: 20 },
+            { name: "Giant Mantis Shrimp", quantity: 20 },
+            { name: "Golden Carp", quantity: 60 },
+            { name: "Green Cabbage", quantity: 100 },
+            { name: "Jade Lungfish", quantity: 20 },
+            { name: "Jade Squash", quantity: 100 },
+            { name: "Jewel Danio", quantity: 20 },
+            { name: "Juicycrunch Carrot", quantity: 100 },
+            { name: "Krasarang Paddlefish", quantity: 20 },
+            { name: "Mogu Pumpkin", quantity: 100 },
+            { name: "Mushan Ribs", quantity: 20 },
+            { name: "Pink Turnip", quantity: 100 },
+            { name: "Raw Crab Meat", quantity: 20 },
+            { name: "Raw Tiger Steak", quantity: 20 },
+            { name: "Raw Turtle Meat", quantity: 20 },
+            { name: "Red Blossom Leek", quantity: 100 },
+            { name: "Redbelly Mandarin", quantity: 20 },
+            { name: "Reef Octopus", quantity: 20 },
+            { name: "Scallions", quantity: 100 },
+            { name: "Striped Melon", quantity: 100 },
+            { name: "Tiger Gourami", quantity: 20 },
+            { name: "White Turnip", quantity: 100 },
+            { name: "Wildfowl Breast", quantity: 20 },
+            { name: "Witchberries", quantity: 100 }
+        ];
+
+        // This function generates the input fields and total cost displays for the food items.
+        function generateInputs() {
+            const container = document.getElementById('food-item-inputs');
+            container.innerHTML = ''; // Clear previous content
+            foodItems.forEach(item => {
+                const label = item.name.replace(/\s+/g, '');
+                const inputHtml = `
+                    <div class="input-group flex flex-col">
+                        <label for="price${label}" class="mb-1 text-sm font-medium">${item.name} (${item.quantity}):</label>
+                        <div class="flex items-center">
+                            <input type="number" id="price${label}" class="px-3 py-2 rounded-lg w-full" min="0" value="0">
+                            <span id="totalCost${label}" class="ml-2 text-sm text-gray-400 whitespace-nowrap">Total: 0.00 G</span>
+                        </div>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', inputHtml);
+            });
+        }
+
+        // This function handles the parsing of the Auctionator text input.
+        function importPrices() {
+            const importBox = document.getElementById('import-box');
+            const statusMessage = document.getElementById('import-status');
+            const lines = importBox.value.trim().split('\n');
+            
+            // Map item names to their input element IDs for quick lookup
+            const itemMap = new Map();
+            foodItems.forEach(item => {
+                const id = `price${item.name.replace(/\s+/g, '')}`;
+                itemMap.set(item.name, document.getElementById(id));
+            });
+            itemMap.set("100 Year Soy Sauce", document.getElementById("price100YearSoySauce"));
+            itemMap.set("Rice Flour", document.getElementById("priceRiceFlour"));
+            itemMap.set("Black Pepper", document.getElementById("priceBlackPepper"));
+
+            let updatedCount = 0;
+            // Iterate over each line to parse the data
+            for (let i = 1; i < lines.length; i++) { // Start from 1 to skip the header
+                const line = lines[i];
+                if (!line) continue;
+                
+                try {
+                    // Split the line by commas, and handle quoted names
+                    const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                    const priceInCopper = parseInt(parts[0].replace(/"/g, ''), 10);
+                    const itemName = parts[1].replace(/"/g, '');
+                    
+                    if (itemMap.has(itemName)) {
+                        const inputElement = itemMap.get(itemName);
+                        // Convert copper to gold (10,000 copper = 1 gold)
+                        const priceInGold = priceInCopper / 10000;
+                        inputElement.value = priceInGold.toFixed(2); // Set price to 2 decimal places
+                        updatedCount++;
+                    }
+                } catch (error) {
+                    console.error("Failed to parse line:", line, error);
+                }
+            }
+
+            statusMessage.textContent = `Successfully imported ${updatedCount} prices.`;
+            updateCalculator();
+        }
+        
+        // This function copies the search string to the clipboard
+        function copySearchString() {
+            const statusMessage = document.getElementById('import-status');
+
+            try {
+                // Create a temporary textarea element to hold the string
+                const tempTextarea = document.createElement('textarea');
+                tempTextarea.value = searchString;
+                document.body.appendChild(tempTextarea);
+                tempTextarea.select();
+                // Use document.execCommand for better compatibility in iframes
+                document.execCommand('copy');
+                document.body.removeChild(tempTextarea);
+
+                statusMessage.textContent = 'Search string copied to clipboard!';
+            } catch (err) {
+                console.error('Failed to copy text:', err);
+                statusMessage.textContent = 'Failed to copy search string.';
+            }
+        }
+
+        // This function handles all the calculations and updates the UI.
+        function updateCalculator() {
+            const tokenCostResults = document.getElementById('token-cost-results');
+            const profitResults = document.getElementById('profit-results');
+
+            let cheapestTokenCost = { name: "N/A", cost: Infinity };
+            
+            // 1. Calculate the cost of one Ironpaw Token for each food item.
+            foodItems.forEach(item => {
+                const label = item.name.replace(/\s+/g, '');
+                const priceInput = document.getElementById(`price${label}`);
+                const totalCostSpan = document.getElementById(`totalCost${label}`);
+                const price = parseFloat(priceInput.value) || 0;
+                const totalCost = price * item.quantity;
+
+                // Update the total cost display for each item
+                totalCostSpan.textContent = `Total: ${totalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} G`;
+
+                if (totalCost > 0 && totalCost < cheapestTokenCost.cost) {
+                    cheapestTokenCost.cost = totalCost;
+                    cheapestTokenCost.name = item.name;
+                }
+            });
+
+            // 2. Display the token cost analysis results.
+            tokenCostResults.innerHTML = '';
+            if (cheapestTokenCost.cost !== Infinity) {
+                const tokenCostHtml = `
+                    <p class="text-sm">The cheapest way to get one Ironpaw Token is by using <span class="font-bold text-white">${cheapestTokenCost.name}</span>.</p>
+                    <p class="text-sm">This will cost you approximately <span class="font-bold text-white">${cheapestTokenCost.cost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span> Gold.</p>
+                `;
+                tokenCostResults.insertAdjacentHTML('beforeend', tokenCostHtml);
+            } else {
+                tokenCostResults.innerHTML = '<p class="text-sm">Please enter a price for at least one item to perform the calculation.</p>';
+            }
+
+            // 3. Calculate the potential profit from reselling ingredients.
+            const soySaucePrice = parseFloat(document.getElementById('price100YearSoySauce').value) || 0;
+            const riceFlourPrice = parseFloat(document.getElementById('priceRiceFlour').value) || 0;
+            const blackPepperPrice = parseFloat(document.getElementById('priceBlackPepper').value) || 0;
+
+            let highestResaleValue = { name: "N/A", value: 0 };
+            if (soySaucePrice > highestResaleValue.value) {
+                highestResaleValue.value = soySaucePrice;
+                highestResaleValue.name = "100 Year Soy Sauce";
+            }
+            if (riceFlourPrice > highestResaleValue.value) {
+                highestResaleValue.value = riceFlourPrice;
+                highestResaleValue.name = "Rice Flour";
+            }
+            if (blackPepperPrice > highestResaleValue.value) {
+                highestResaleValue.value = blackPepperPrice;
+                highestResaleValue.name = "Black Pepper";
+            }
+            
+            // Calculate final profit only if we have valid costs
+            let grossProfit = 0;
+            if (cheapestTokenCost.cost !== Infinity && highestResaleValue.value > 0) {
+                grossProfit = highestResaleValue.value - cheapestTokenCost.cost;
+            }
+
+            // 4. Display the profit analysis results with more detail.
+            profitResults.innerHTML = '';
+            if (cheapestTokenCost.cost !== Infinity && highestResaleValue.value > 0) {
+                const profitClass = grossProfit >= 0 ? 'profit' : 'loss';
+                const profitText = grossProfit >= 0 ? 'Profit' : 'Loss';
+                const profitHtml = `
+                    <p class="text-sm">The most valuable single item to buy with one token is <span class="font-bold text-white">${highestResaleValue.name}</span>, which can be resold for <span class="font-bold text-white">${highestResaleValue.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span> Gold.</p>
+                    <p class="text-sm mt-2">The cost to acquire one token is <span class="font-bold text-white">${cheapestTokenCost.cost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span> Gold.</p>
+                    <p class="text-lg font-bold mt-2">Potential ${profitText}: <span class="${profitClass}">${grossProfit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span> Gold</p>
+                `;
+                profitResults.insertAdjacentHTML('beforeend', profitHtml);
+            } else {
+                profitResults.innerHTML = '<p class="text-sm">Please enter all prices to see the full analysis.</p>';
+            }
+        }
+
+        // Initialize inputs and add event listeners
+        window.onload = function() {
+            generateInputs();
+            document.getElementById('import-btn').addEventListener('click', importPrices);
+            document.getElementById('copy-search-string-btn').addEventListener('click', copySearchString);
+            const allInputs = document.querySelectorAll('input[type="number"]');
+            allInputs.forEach(input => {
+                input.addEventListener('input', updateCalculator);
+            });
+            updateCalculator(); // Initial calculation on page load
+        };
+    </script>
+</body>
+</html>
