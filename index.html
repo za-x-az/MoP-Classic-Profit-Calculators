@@ -13,43 +13,43 @@
             color: #c9d1d9;
         }
         .container {
-            max-width: 1000px;
-        }
-        .input-group input, .input-group textarea {
-            background-color: #21262d;
-            border-color: #30363d;
-            color: #c9d1d9;
-        }
-        .card {
-            background-color: #161b22;
-            border: 1px solid #30363d;
-        }
-        .results-container .card {
-            min-height: 150px;
-        }
-        .profit {
-            color: #34d399; /* Tailwind's emerald-400 */
-        }
-        .loss {
-            color: #f87171; /* Tailwind's red-400 */
-        }
-        .btn {
-            background-color: #30363d;
-            color: #c9d1d9;
-            border: 1px solid #444c56;
-            transition: all 0.2s;
-        }
-        .btn:hover {
-            background-color: #444c56;
-        }
-        .btn-primary {
-            background-color: #1a73e8;
-            color: #ffffff;
-            border: none;
-        }
-        .btn-primary:hover {
-            background-color: #1764c9;
-        }
+    max-width: 1000px;
+}
+.input-group input, .input-group textarea {
+    background-color: #21262d;
+    border-color: #30363d;
+    color: #c9d1d9;
+}
+.card {
+    background-color: #161b22;
+    border: 1px solid #30363d;
+}
+.results-container .card {
+    min-height: 150px;
+}
+.profit {
+    color: #34d399; /* Tailwind's emerald-400 */
+}
+.loss {
+    color: #f87171; /* Tailwind's red-400 */
+}
+.btn {
+    background-color: #30363d;
+    color: #c9d1d9;
+    border: 1px solid #444c56;
+    transition: all 0.2s;
+}
+.btn:hover {
+    background-color: #444c56;
+}
+.btn-primary {
+    background-color: #1a73e8;
+    color: #ffffff;
+    border: none;
+}
+.btn-primary:hover {
+    background-color: #1764c9;
+}
     </style>
 </head>
 <body class="p-6">
@@ -87,7 +87,8 @@
         </div>
 
         <!-- Input Fields -->
-        <div class="grid lg:grid-cols-2 gap-8 mb-8">
+        <!-- This container now stacks the two input sections vertically on all screen sizes -->
+        <div class="grid gap-8 mb-8">
             <!-- Food Items Input -->
             <div class="card p-6 rounded-lg shadow-lg">
                 <h2 class="text-2xl font-bold mb-4 text-white">Food Item Prices (per item)</h2>
@@ -99,21 +100,9 @@
             <!-- Cooking Ingredients Input -->
             <div class="card p-6 rounded-lg shadow-lg">
                 <h2 class="text-2xl font-bold mb-4 text-white">Cooking Ingredient Prices (per item)</h2>
-                <div class="grid grid-cols-1 gap-4">
-                    <div class="input-group flex flex-col">
-                        <label for="price100YearSoySauce" class="mb-1 text-sm font-medium">100 Year Soy Sauce (AH Price):</label>
-                        <input type="number" id="price100YearSoySauce" class="px-3 py-2 rounded-lg" min="0" value="0">
-                    </div>
-                    <div class="input-group flex flex-col">
-                        <label for="priceRiceFlour" class="mb-1 text-sm font-medium">Rice Flour (AH Price):</label>
-                        <input type="number" id="priceRiceFlour" class="px-3 py-2 rounded-lg" min="0" value="0">
-                    </div>
-                    <div class="input-group flex flex-col">
-                        <label for="priceBlackPepper" class="mb-1 text-sm font-medium">Black Pepper (AH Price):</label>
-                        <input type="number" id="priceBlackPepper" class="px-3 py-2 rounded-lg" min="0" value="0">
-                    </div>
+                <div id="token-item-inputs" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Inputs for token-related items will be generated here by JavaScript -->
                 </div>
-                <p class="text-sm mt-4 text-gray-400">Note: One Ironpaw Token can be redeemed for one of these items.</p>
             </div>
         </div>
 
@@ -141,49 +130,99 @@
 
     <script>
         // The search string for the Auctionator addon
-        const searchString = 'MoP Cooking^"Raw Raw Crocolisk Belly";;0;0;0;0;0;0;0;0;;#;;^"Emperor Salmon"^"Giant Mantis Shrimp"^"Golden Carp"^"Green Cabbage"^"Jade Lungfish"^"Jade Squash"^"Jewel Danio"^"Juicycrunch Carrot"^"Krasarang Paddlefish"^"Mogu Pumpkin"^"Mushan Ribs"^"Pink Turnip"^"Raw Crab Meat"^"Raw Tiger Steak"^"Raw Turtle Meat"^"Red Blossom Leek"^"Redbelly Mandarin"^"Reef Octopus"^"Scallions"^"Striped Melon"^"Tiger Gourami"^"White Turnip"^"Wildfowl Breast"^"Witchberries"^"100 Year Soy Sauce"^"Rice Flour"^"Black Pepper"';
+        const searchString = 'MoP Cooking^"Raw Crocolisk Belly";;0;0;0;0;0;0;0;0;;#;;^"Emperor Salmon"^"Giant Mantis Shrimp"^"Golden Carp"^"Green Cabbage"^"Jade Lungfish"^"Jade Squash"^"Jewel Danio"^"Juicycrunch Carrot"^"Krasarang Paddlefish"^"Mogu Pumpkin"^"Mushan Ribs"^"Pink Turnip"^"Raw Crab Meat"^"Raw Tiger Steak"^"Raw Turtle Meat"^"Red Blossom Leek"^"Redbelly Mandarin"^"Reef Octopus"^"Scallions"^"Striped Melon"^"Tiger Gourami"^"White Turnip"^"Wildfowl Breast"^"Witchberries"^"100 Year Soy Sauce"^"Rice Flour"^"Black Pepper"';
 
-        // Data for food items and the quantity needed per Ironpaw Token
+        // Data for food items, quantity needed, and their icon URLs, with the specific Wowhead URL for the requested item.
         const foodItems = [
-            { name: "Raw Crocolisk Belly", quantity: 20 },
-            { name: "Emperor Salmon", quantity: 20 },
-            { name: "Giant Mantis Shrimp", quantity: 20 },
-            { name: "Golden Carp", quantity: 60 },
-            { name: "Green Cabbage", quantity: 100 },
-            { name: "Jade Lungfish", quantity: 20 },
-            { name: "Jade Squash", quantity: 100 },
-            { name: "Jewel Danio", quantity: 20 },
-            { name: "Juicycrunch Carrot", quantity: 100 },
-            { name: "Krasarang Paddlefish", quantity: 20 },
-            { name: "Mogu Pumpkin", quantity: 100 },
-            { name: "Mushan Ribs", quantity: 20 },
-            { name: "Pink Turnip", quantity: 100 },
-            { name: "Raw Crab Meat", quantity: 20 },
-            { name: "Raw Tiger Steak", quantity: 20 },
-            { name: "Raw Turtle Meat", quantity: 20 },
-            { name: "Red Blossom Leek", quantity: 100 },
-            { name: "Redbelly Mandarin", quantity: 20 },
-            { name: "Reef Octopus", quantity: 20 },
-            { name: "Scallions", quantity: 100 },
-            { name: "Striped Melon", quantity: 100 },
-            { name: "Tiger Gourami", quantity: 20 },
-            { name: "White Turnip", quantity: 100 },
-            { name: "Wildfowl Breast", quantity: 20 },
-            { name: "Witchberries", quantity: 100 }
+            { name: "Raw Crocolisk Belly", quantity: 20, icon: "https://wow.zamimg.com/images/wow/icons/large/inv_misc_food_meat_toughwolfflank.jpg", wowheadUrl: "https://www.wowhead.com/mop-classic/item=75014/raw-crocolisk-belly" },
+            { name: "Emperor Salmon", quantity: 20, icon: "https://wow.zamimg.com/images/wow/icons/large/inv_misc_fish_98.jpg", wowheadUrl: "https://www.wowhead.com/mop-classic/item=74859/emperor-salmon" },
+            { name: "Giant Mantis Shrimp", quantity: 20, icon: "https://wow.zamimg.com/images/wow/icons/large/inv_misc_fish_101.jpg", wowheadUrl: "https://www.wowhead.com/mop-classic/item=74857/giant-mantis-shrimp" },
+            { name: "Golden Carp", quantity: 60, icon: "https://wow.zamimg.com/images/wow/icons/large/inv_misc_fish_103.jpg", wowheadUrl: "https://www.wowhead.com/mop-classic/item=74866/golden-carp" },
+            { name: "Green Cabbage", quantity: 100, icon: "https://wow.zamimg.com/images/wow/icons/large/inv_misc_food_vendor_greencabbage.jpg", wowheadUrl: "https://www.wowhead.com/mop-classic/item=74840/green-cabbage" },
+            { name: "Jade Lungfish", quantity: 20, icon: "https://wow.zamimg.com/images/wow/icons/large/inv_misc_fish_95.jpg", wowheadUrl: "https://www.wowhead.com/mop-classic/item=74856/jade-lungfish" },
+            { name: "Jade Squash", quantity: 100, icon: "https://wow.zamimg.com/images/wow/icons/large/inv_misc_food_vendor_jadesquash.jpg", wowheadUrl: "https://www.wowhead.com/mop-classic/item=74847/jade-squash" },
+            { name: "Jewel Danio", quantity: 20, icon: "https://wow.zamimg.com/images/wow/icons/large/inv_misc_fish_92.jpg", wowheadUrl: "https://www.wowhead.com/mop-classic/item=74863/jewel-danio" },
+            { name: "Juicycrunch Carrot", quantity: 100, icon: "https://wow.zamimg.com/images/wow/icons/large/inv_misc_food_vendor_carrot.jpg", wowheadUrl: "https://www.wowhead.com/mop-classic/item=74841/juicycrunch-carrot" },
+            { name: "Krasarang Paddlefish", quantity: 20, icon: "https://wow.zamimg.com/images/wow/icons/large/inv_misc_fish_93.jpg", wowheadUrl: "https://www.wowhead.com/mop-classic/item=74865/krasarang-paddlefish" },
+            { name: "Mogu Pumpkin", quantity: 100, icon: "https://wow.zamimg.com/images/wow/icons/large/inv_misc_food_vendor_mogupumpkin.jpg", wowheadUrl: "https://www.wowhead.com/mop-classic/item=74842/mogu-pumpkin" },
+            { name: "Mushan Ribs", quantity: 20, icon: "https://wow.zamimg.com/images/wow/icons/large/inv_misc_food_meat_oxribs.jpg", wowheadUrl: "https://www.wowhead.com/mop-classic/item=74834/mushan-ribs" },
+            { name: "Pink Turnip", quantity: 100, icon: "https://wow.zamimg.com/images/wow/icons/large/inv_misc_food_vendor_pinkturnip.jpg", wowheadUrl: "https://www.wowhead.com/mop-classic/item=74849/pink-turnip" },
+            { name: "Raw Crab Meat", quantity: 20, icon: "https://wow.zamimg.com/images/wow/icons/large/inv_misc_food_meat_crabmeat.jpg", wowheadUrl: "https://www.wowhead.com/mop-classic/item=74838/raw-crab-meat" },
+            { name: "Raw Tiger Steak", quantity: 20, icon: "https://wow.zamimg.com/images/wow/icons/large/inv_misc_food_meat_rawtigersteak.jpg", wowheadUrl: "https://www.wowhead.com/mop-classic/item=74833/raw-tiger-steak" },
+            { name: "Raw Turtle Meat", quantity: 20, icon: "https://wow.zamimg.com/images/wow/icons/large/inv_misc_food_meat_forestboarmeat.jpg", wowheadUrl: "https://www.wowhead.com/mop-classic/item=74837/raw-turtle-meat" },
+            { name: "Red Blossom Leek", quantity: 100, icon: "https://wow.zamimg.com/images/wow/icons/large/inv_misc_food_vendor_redblossomleek.jpg", wowheadUrl: "https://www.wowhead.com/mop-classic/item=74844/red-blossom-leek" },
+            { name: "Redbelly Mandarin", quantity: 20, icon: "https://wow.zamimg.com/images/wow/icons/large/inv_misc_fish_94.jpg", wowheadUrl: "https://www.wowhead.com/mop-classic/item=74860/redbelly-mandarin" },
+            { name: "Reef Octopus", quantity: 20, icon: "https://wow.zamimg.com/images/wow/icons/large/inv_misc_fish_102.jpg", wowheadUrl: "https://www.wowhead.com/mop-classic/item=74864/reef-octopus" },
+            { name: "Scallions", quantity: 100, icon: "https://wow.zamimg.com/images/wow/icons/large/inv_misc_food_vendor_scallions.jpg", wowheadUrl: "https://www.wowhead.com/mop-classic/item=74843/scallions" },
+            { name: "Striped Melon", quantity: 100, icon: "https://wow.zamimg.com/images/wow/icons/large/inv_misc_food_vendor_stripedmelon.jpg", wowheadUrl: "https://www.wowhead.com/mop-classic/item=74848/striped-melon" },
+            { name: "Tiger Gourami", quantity: 20, icon: "https://wow.zamimg.com/images/wow/icons/large/inv_misc_fish_99.jpg", wowheadUrl: "https://www.wowhead.com/mop-classic/item=74861/tiger-gourami" },
+            { name: "White Turnip", quantity: 100, icon: "https://wow.zamimg.com/images/wow/icons/large/inv_misc_food_vendor_whiteturnip.jpg", wowheadUrl: "https://www.wowhead.com/mop-classic/item=74850/white-turnip" },
+            { name: "Wildfowl Breast", quantity: 20, icon: "https://wow.zamimg.com/images/wow/icons/large/inv_misc_food_meat_pheasantbreast.jpg", wowheadUrl: "https://www.wowhead.com/mop-classic/item=74839/wildfowl-breast" },
+            { name: "Witchberries", quantity: 100, icon: "https://wow.zamimg.com/images/wow/icons/large/inv_misc_food_vendor_witchberries.jpg", wowheadUrl: "https://www.wowhead.com/mop-classic/item=74846/witchberries" }
         ];
 
+        // Data for the items you can buy with Ironpaw Tokens
+        const tokenItems = [
+            { name: "100 Year Soy Sauce", icon: "https://wow.zamimg.com/images/wow/icons/large/inv_misc_food_vendor_soysauce.jpg", wowheadUrl: "https://www.wowhead.com/mop-classic/item=74853/100-year-soy-sauce", inputId: "price100YearSoySauce" },
+            { name: "Rice Flour", icon: "https://wow.zamimg.com/images/wow/icons/large/inv_misc_bag_10_black.jpg", wowheadUrl: "https://www.wowhead.com/mop-classic/item=74662/rice-flour", inputId: "priceRiceFlour" },
+            { name: "Black Pepper", icon: "https://wow.zamimg.com/images/wow/icons/large/inv_misc_food_vendor_blackpepper.jpg", wowheadUrl: "https://www.wowhead.com/mop-classic/item=74661/black-pepper", inputId: "priceBlackPepper" }
+        ];
+
+        // Ironpaw Token data
+        const ironpawToken = {
+            name: "Ironpaw Token",
+            icon: "https://wow.zamimg.com/images/wow/icons/large/inv_relics_idolofferocity.jpg",
+            wowheadUrl: "https://www.wowhead.com/mop-classic/currency=402/ironpaw-token"
+        };
+
+
         // This function generates the input fields and total cost displays for the food items.
-        function generateInputs() {
+        function generateFoodInputs() {
             const container = document.getElementById('food-item-inputs');
             container.innerHTML = ''; // Clear previous content
             foodItems.forEach(item => {
                 const label = item.name.replace(/\s+/g, '');
+                let nameHtml = `<label for="price${label}" class="mb-1 text-sm font-medium">${item.name} (${item.quantity}):</label>`;
+                
+                // Only create a link if a wowheadUrl is provided
+                if (item.wowheadUrl) {
+                    nameHtml = `<label for="price${label}" class="mb-1 text-sm font-medium">
+                                    <a href="${item.wowheadUrl}" target="_blank" class="text-blue-400 hover:underline">
+                                        ${item.name} (${item.quantity}):
+                                    </a>
+                                </label>`;
+                }
+
                 const inputHtml = `
-                    <div class="input-group flex flex-col">
-                        <label for="price${label}" class="mb-1 text-sm font-medium">${item.name} (${item.quantity}):</label>
-                        <div class="flex items-center">
-                            <input type="number" id="price${label}" class="px-3 py-2 rounded-lg w-full" min="0" value="0">
-                            <span id="totalCost${label}" class="ml-2 text-sm text-gray-400 whitespace-nowrap">Total: 0.00 G</span>
+                    <div class="input-group flex items-center space-x-2">
+                        <img src="${item.icon}" class="w-12 h-12 rounded-lg" onerror="this.onerror=null;this.src='https://placehold.co/48x48/161b22/c9d1d9?text=N/A';" alt="${item.name} icon">
+                        <div class="flex flex-col flex-grow">
+                            ${nameHtml}
+                            <div class="flex items-center">
+                                <input type="number" id="price${label}" class="px-3 py-2 rounded-lg max-w-xs" min="0" value="0">
+                                <span id="totalCost${label}" class="ml-2 text-sm text-gray-400 whitespace-nowrap">Total: 0.00 G</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', inputHtml);
+            });
+        }
+
+        // This function generates the input fields for the token-related items.
+        function generateTokenInputs() {
+            const container = document.getElementById('token-item-inputs');
+            container.innerHTML = ''; // Clear previous content
+            tokenItems.forEach(item => {
+                const inputHtml = `
+                    <div class="input-group flex flex-col items-center space-y-2">
+                        <a href="${item.wowheadUrl}" target="_blank" class="flex flex-col items-center text-center group">
+                            <img src="${item.icon}" class="w-12 h-12 rounded-lg group-hover:scale-110 transition-transform" onerror="this.onerror=null;this.src='https://placehold.co/48x48/161b22/c9d1d9?text=N/A';" alt="${item.name} icon">
+                            <span class="text-xs mt-1 text-blue-400 group-hover:underline">${item.name}</span>
+                        </a>
+                        <div class="w-full">
+                            <label for="${item.inputId}" class="sr-only">${item.name} (AH Price):</label>
+                            <input type="number" id="${item.inputId}" class="px-3 py-2 rounded-lg w-full text-center" min="0" value="0" placeholder="Price">
                         </div>
                     </div>
                 `;
@@ -203,9 +242,9 @@
                 const id = `price${item.name.replace(/\s+/g, '')}`;
                 itemMap.set(item.name, document.getElementById(id));
             });
-            itemMap.set("100 Year Soy Sauce", document.getElementById("price100YearSoySauce"));
-            itemMap.set("Rice Flour", document.getElementById("priceRiceFlour"));
-            itemMap.set("Black Pepper", document.getElementById("priceBlackPepper"));
+            tokenItems.forEach(item => {
+                itemMap.set(item.name, document.getElementById(item.inputId));
+            });
 
             let updatedCount = 0;
             // Iterate over each line to parse the data
@@ -261,7 +300,7 @@
             const tokenCostResults = document.getElementById('token-cost-results');
             const profitResults = document.getElementById('profit-results');
 
-            let cheapestTokenCost = { name: "N/A", cost: Infinity };
+            let cheapestTokenCost = { name: "N/A", cost: Infinity, icon: "" };
             
             // 1. Calculate the cost of one Ironpaw Token for each food item.
             foodItems.forEach(item => {
@@ -277,6 +316,8 @@
                 if (totalCost > 0 && totalCost < cheapestTokenCost.cost) {
                     cheapestTokenCost.cost = totalCost;
                     cheapestTokenCost.name = item.name;
+                    cheapestTokenCost.icon = item.icon;
+                    cheapestTokenCost.wowheadUrl = item.wowheadUrl;
                 }
             });
 
@@ -284,7 +325,14 @@
             tokenCostResults.innerHTML = '';
             if (cheapestTokenCost.cost !== Infinity) {
                 const tokenCostHtml = `
-                    <p class="text-sm">The cheapest way to get one Ironpaw Token is by using <span class="font-bold text-white">${cheapestTokenCost.name}</span>.</p>
+                    <p class="text-sm flex items-center">
+                        The cheapest way to get one 
+                        <img src="${ironpawToken.icon}" class="w-8 h-8 rounded-full mx-1" onerror="this.onerror=null;this.src='https://placehold.co/32x32/161b22/c9d1d9?text=N/A';" alt="${ironpawToken.name} icon">
+                        <a href="${ironpawToken.wowheadUrl}" target="_blank" class="font-bold text-blue-400 hover:underline">${ironpawToken.name}</a>
+                        is by using 
+                        <img src="${cheapestTokenCost.icon}" class="w-12 h-12 rounded-full mx-2" onerror="this.onerror=null;this.src='https://placehold.co/48x48/161b22/c9d1d9?text=N/A';" alt="${cheapestTokenCost.name} icon">
+                        <a href="${cheapestTokenCost.wowheadUrl}" target="_blank" class="font-bold text-blue-400 hover:underline">${cheapestTokenCost.name}</a>.
+                    </p>
                     <p class="text-sm">This will cost you approximately <span class="font-bold text-white">${cheapestTokenCost.cost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span> Gold.</p>
                 `;
                 tokenCostResults.insertAdjacentHTML('beforeend', tokenCostHtml);
@@ -293,23 +341,16 @@
             }
 
             // 3. Calculate the potential profit from reselling ingredients.
-            const soySaucePrice = parseFloat(document.getElementById('price100YearSoySauce').value) || 0;
-            const riceFlourPrice = parseFloat(document.getElementById('priceRiceFlour').value) || 0;
-            const blackPepperPrice = parseFloat(document.getElementById('priceBlackPepper').value) || 0;
-
-            let highestResaleValue = { name: "N/A", value: 0 };
-            if (soySaucePrice > highestResaleValue.value) {
-                highestResaleValue.value = soySaucePrice;
-                highestResaleValue.name = "100 Year Soy Sauce";
-            }
-            if (riceFlourPrice > highestResaleValue.value) {
-                highestResaleValue.value = riceFlourPrice;
-                highestResaleValue.name = "Rice Flour";
-            }
-            if (blackPepperPrice > highestResaleValue.value) {
-                highestResaleValue.value = blackPepperPrice;
-                highestResaleValue.name = "Black Pepper";
-            }
+            let highestResaleValue = { name: "N/A", value: 0, icon: "", wowheadUrl: "" };
+            tokenItems.forEach(item => {
+                const price = parseFloat(document.getElementById(item.inputId).value) || 0;
+                if (price > highestResaleValue.value) {
+                    highestResaleValue.value = price;
+                    highestResaleValue.name = item.name;
+                    highestResaleValue.icon = item.icon;
+                    highestResaleValue.wowheadUrl = item.wowheadUrl;
+                }
+            });
             
             // Calculate final profit only if we have valid costs
             let grossProfit = 0;
@@ -323,7 +364,11 @@
                 const profitClass = grossProfit >= 0 ? 'profit' : 'loss';
                 const profitText = grossProfit >= 0 ? 'Profit' : 'Loss';
                 const profitHtml = `
-                    <p class="text-sm">The most valuable single item to buy with one token is <span class="font-bold text-white">${highestResaleValue.name}</span>, which can be resold for <span class="font-bold text-white">${highestResaleValue.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span> Gold.</p>
+                    <p class="text-sm flex items-center">
+                        The most valuable single item to buy with one token is 
+                        <img src="${highestResaleValue.icon}" class="w-12 h-12 rounded-full mx-2" onerror="this.onerror=null;this.src='https://placehold.co/48x48/161b22/c9d1d9?text=N/A';" alt="${highestResaleValue.name} icon">
+                        <a href="${highestResaleValue.wowheadUrl}" target="_blank" class="font-bold text-blue-400 hover:underline">${highestResaleValue.name}</a>, which can be resold for <span class="font-bold text-white">${highestResaleValue.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span> Gold.
+                    </p>
                     <p class="text-sm mt-2">The cost to acquire one token is <span class="font-bold text-white">${cheapestTokenCost.cost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span> Gold.</p>
                     <p class="text-lg font-bold mt-2">Potential ${profitText}: <span class="${profitClass}">${grossProfit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span> Gold</p>
                 `;
@@ -335,9 +380,12 @@
 
         // Initialize inputs and add event listeners
         window.onload = function() {
-            generateInputs();
+            generateFoodInputs();
+            generateTokenInputs(); // Call the new function to generate token-related inputs
             document.getElementById('import-btn').addEventListener('click', importPrices);
             document.getElementById('copy-search-string-btn').addEventListener('click', copySearchString);
+            
+            // Add listeners for all dynamically generated inputs
             const allInputs = document.querySelectorAll('input[type="number"]');
             allInputs.forEach(input => {
                 input.addEventListener('input', updateCalculator);
