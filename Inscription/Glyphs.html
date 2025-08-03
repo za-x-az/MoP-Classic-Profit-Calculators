@@ -162,9 +162,11 @@
 
         <!-- Glyph Results Section -->
         <div class="results-container space-y-6">
-            <h2 class="text-3xl font-bold mb-6 text-center text-white">Glyph Profit Analysis by Class</h2>
-            <p class="text-sm text-gray-400 mb-4 text-center">**Note:** Glyph class and ink requirements are a best-effort mapping. Please verify this data in the JavaScript code for your specific game version.</p>
-
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-3xl font-bold text-white">Glyph Profit Analysis by Class</h2>
+                <button id="collapse-all-btn" class="btn px-4 py-2 rounded-lg font-bold">Collapse All</button>
+            </div>
+            
             <div id="glyph-results">
                 <!-- Glyph results grouped by class will be generated here by JavaScript -->
             </div>
@@ -1089,6 +1091,22 @@
             copyItemsToClipboard(materials, "Materials list");
         }
 
+        /**
+         * Event handler for the "Collapse All" button.
+         */
+        function toggleAllSections() {
+            const allDetails = document.querySelectorAll('#glyph-results details');
+            const firstDetailsOpen = allDetails.length > 0 ? allDetails[0].open : false;
+            
+            allDetails.forEach(details => {
+                details.open = !firstDetailsOpen;
+            });
+
+            // Update button text
+            const collapseBtn = document.getElementById('collapse-all-btn');
+            collapseBtn.textContent = firstDetailsOpen ? 'Expand All' : 'Collapse All';
+        }
+
         // --- INITIALIZATION ---
 
         window.onload = function() {
@@ -1101,6 +1119,7 @@
             document.getElementById('copy-glyphs-list-btn').addEventListener('click', copyGlyphsList);
             document.getElementById('copy-materials-list-btn').addEventListener('click', copyMaterialsList);
             document.getElementById('min-profit').addEventListener('input', updateCalculator);
+            document.getElementById('collapse-all-btn').addEventListener('click', toggleAllSections);
 
             // Add event listeners to all newly created input fields
             const allInputs = document.querySelectorAll('input[type="number"]');
