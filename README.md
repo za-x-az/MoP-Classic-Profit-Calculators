@@ -11,7 +11,8 @@ This project is made and maintained by Zaximus-MirageRaceway EU  <br><br>
   
   
 ## Profit calculators for different professions and or conversions in MoP.  
-### Disclaimer: This tool is provided "as is" with no guarantees. I am not responsible for any loss of gold or in-game resources resulting from errors, bugs, or incorrect calculations. Use at your own risk.  <br>
+### Disclaimer: This tool is provided "as is" with no guarantees.  
+### I am not responsible for any loss of gold or in-game resources resulting from errors, bugs, or incorrect calculations. Use at your own risk.  <br>
 
   
 <br><br> IronPaw Tokens:  
