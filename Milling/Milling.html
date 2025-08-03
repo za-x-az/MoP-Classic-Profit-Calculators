@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Milling Profit Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0d1117;
+            color: #c9d1d9;
+        }
+        .container {
+            max-width: 1000px;
+        }
+        .input-group input, .input-group textarea {
+            background-color: #21262d;
+            border-color: #30363d;
+            color: #c9d1d9;
+        }
+        .card {
+            background-color: #161b22;
+            border: 1px solid #30363d;
+        }
+        .results-container .card {
+            min-height: 150px;
+        }
+        .profit {
+            color: #34d399; /* Tailwind's emerald-400 */
+        }
+        .loss {
+            color: #f87171; /* Tailwind's red-400 */
+        }
+        .btn {
+            background-color: #30363d;
+            color: #c9d1d9;
+            border: 1px solid #444c56;
+            transition: all 0.2s;
+        }
+        .btn:hover {
+            background-color: #444c56;
+        }
+    </style>
+</head>
+<body class="p-6">
+    <div class="container mx-auto">
+        <h1 class="text-3xl font-bold mb-6 text-center text-white">WoW Milling Profit Calculator</h1>
+        
+        <!-- Instructions Section -->
+        <div class="card p-4 rounded-lg shadow-lg mb-8">
+            <h2 class="text-xl font-bold mb-2">Instructions</h2>
+            <div class="flex flex-col lg:flex-row items-center lg:items-start justify-between gap-4">
+                <p class="text-sm lg:w-1/2">
+                    This calculator helps you determine the profitability of milling herbs into pigments and then crafting inks.
+                    First, create your shopping list in-game, import the prices, and then see the potential profits.
+                </p>
+                <div class="flex flex-col items-center justify-center p-4 rounded-lg bg-[#21262d] mt-4 lg:mt-0 lg:w-1/2">
+                    <p class="text-sm text-center">
+                        Click the button below to copy the shopping list string for your Auctionator addon.
+                    </p>
+                    <button id="copy-search-string-btn" class="btn px-4 py-2 rounded-lg font-bold text-sm mt-4 w-full">Copy Auctionator Shopping List</button>
+                    <p id="import-status" class="text-xs text-center text-gray-400 mt-2"></p>
+                </div>
+            </div>
+            <details class="mt-4">
+                <summary class="cursor-pointer text-sm font-semibold text-blue-400 hover:underline">Click here for detailed instructions</summary>
+                <div class="space-y-4 pt-4">
+                    <div>
+                        <h4 class="font-bold mt-4 mb-1">Add the Shopping List to Auctionator in-game</h4>
+                        <p class="text-xs text-gray-400">This step gets all the relevant item prices from the auction house for you.</p>
+                        <ol class="list-decimal list-inside text-sm space-y-1 mt-2">
+                            <li>Open your AH.</li>
+                            <li>Go to the "Shopping" tab.</li>
+                            <li>While under "Shopping Lists" find the "Import" button. Click it.</li>
+                            <li>Paste the string you copied from the calculator into the import box.
+                                <span class="block">You now have a shopping list with all the necessary items!</span>
+                            </li>
+                        </ol>
+                    </div>
+                    <div>
+                        <h4 class="font-bold mt-4 mb-1">Export the Search Results from Auctionator</h4>
+                        <p class="text-xs text-gray-400">This step scans the auction house and gets the data you need.</p>
+                        <ol class="list-decimal list-inside text-sm mt-2 space-y-1">
+                            <li>In the AH, go to the "Shopping" tab.</li>
+                            <li>Select the shopping list you just created (e.g., "Milling").</li>
+                            <li>Auctionator is now scanning for the current prices for all the items on your list. This may take a few moments.</li>
+                            <li>Once the scan is complete, in the bottom right is a button labeled "Export Results". Click it.</li>
+                            <li>A window will pop up called "Copy Text". Click inside this box and copy all of the text.</li>
+                        </ol>
+                    </div>
+                    <div>
+                        <h4 class="font-bold mt-4 mb-1">Use the Calculator</h4>
+                        <p class="text-xs text-gray-400">This final step uses the data you've gathered to show you the best way to make a profit.</p>
+                        <ol class="list-decimal list-inside text-sm mt-2 space-y-1">
+                            <li>Find the "Import Prices" box.</li>
+                            <li>Paste the text you just copied from Auctionator into this box.</li>
+                            <li>Click the "Import Prices" button.</li>
+                        </ol>
+                        <p class="text-sm mt-2">The calculator will now automatically update with all the new data and show you the potential profit for each type of herb.</p>
+                    </div>
+                </div>
+            </details>
+        </div>
+
+        <!-- Import Prices Section -->
+        <div class="card p-6 rounded-lg shadow-lg mb-8">
+            <h2 class="text-2xl font-bold mb-4 text-white">Import Prices</h2>
+            <div class="grid md:grid-cols-2 gap-4">
+                <textarea id="import-box" class="w-full h-32 px-3 py-2 rounded-lg text-sm" placeholder="Paste your Auctionator data here..."></textarea>
+                <div class="flex flex-col justify-between">
+                    <button id="import-btn" class="btn px-4 py-2 rounded-lg font-bold mb-2">Import Prices</button>
+                    <p class="text-sm text-gray-400 mt-2">
+                        Expected format:<br>
+                        "Price","Name","Item Level","Owned?","Available"<br>
+                        ...
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Fields -->
+        <div class="grid lg:grid-cols-2 gap-8 mb-8">
+            <!-- Herb Prices Input -->
+            <div class="card p-6 rounded-lg shadow-lg">
+                <h2 class="text-2xl font-bold mb-4 text-white">Herb Prices (per herb)</h2>
+                <div id="herb-item-inputs" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Inputs for herbs will be generated here by JavaScript -->
+                </div>
+            </div>
+            
+            <!-- Pigment & Ink Prices -->
+            <div class="card p-6 rounded-lg shadow-lg">
+                <h2 class="text-2xl font-bold mb-4 text-white">Pigment and Ink Prices</h2>
+                <div id="product-item-inputs" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Inputs for pigments and inks will be generated here by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Number of Herbs to Mill Input -->
+        <div class="card p-6 rounded-lg shadow-lg mb-8">
+            <div class="flex items-center gap-4">
+                <h2 class="text-2xl font-bold text-white">Number of Herbs to Mill</h2>
+                <input type="number" id="numHerbs" class="px-3 py-2 rounded-lg w-28 text-right bg-[#21262d] border-[#30363d] text-[#c9d1d9]" value="100" min="5" step="5">
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="results-container">
+            <div class="card p-6 rounded-lg shadow-lg">
+                <h2 class="text-2xl font-bold mb-4 text-white">Profit Analysis</h2>
+                <div id="profit-results" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Results will be generated here by JavaScript -->
+                    <p class="text-sm">Enter prices to see the potential profit from milling and crafting inks.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // The search string for the Auctionator addon. This includes all herbs, pigments, and inks.
+        const searchString = 'Milling^"Fool\'s Cap";;0;0;0;0;0;0;0;0;;#;;^"Silkweed"^"Green Tea Leaf"^"Snow Lily"^"Rain Poppy"^"Shadow Pigment"^"Misty Pigment"^"Ink of Dreams"^"Starlight Ink"';
+        
+        // Data for herbs and their milling yields. Milling takes 5 herbs.
+        const millingData = {
+            'foolsCap': {
+                name: "Fool's Cap",
+                wowheadUrl: "https://www.wowhead.com/mop-classic/item=79011/fools-cap",
+                icon: "https://wow.zamimg.com/images/wow/icons/large/inv_misc_herb_foolscap.jpg",
+                // Milling 5 Fool's Cap gives pigments with these average yields.
+                // Note: The user's provided chances are ambiguous. The following values
+                // are an attempt to create a reasonable average from the provided data.
+                // Shadow Pigment: "2-4", "100%, 30%, 26%, 29%". Assumed guaranteed 2, plus 30% for a 3rd, 26% for a 4th. The 29% is ignored as it's outside the "2-4" range.
+                // Misty Pigment: "1-3", "42%, 0.4%, 1.5%". Assumed these are probabilities for 1, 2, or 3 pigments. The values are very low.
+                pigments: {
+                    'shadow': { name: "Shadow Pigment", avgYield: (2 + 0.30 + 0.26) }, 
+                    'misty': { name: "Misty Pigment", avgYield: (1 * 0.42) + (2 * 0.004) + (3 * 0.015) } 
+                }
+            },
+            'otherHerbs': {
+                name: "Other Herbs", // A group for the other herbs that have the same milling results
+                herbs: [
+                    { name: "Silkweed", wowheadUrl: "https://www.wowhead.com/mop-classic/item=72235/silkweed", icon: "https://wow.zamimg.com/images/wow/icons/large/inv_misc_herb_silkweed.jpg" },
+                    { name: "Green Tea Leaf", wowheadUrl: "https://www.wowhead.com/mop-classic/item=72234/green-tea-leaf", icon: "https://wow.zamimg.com/images/wow/icons/large/inv_misc_herb_jadetealeaf.jpg" },
+                    { name: "Snow Lily", wowheadUrl: "https://www.wowhead.com/mop-classic/item=79010/snow-lily", icon: "https://wow.zamimg.com/images/wow/icons/large/inv_misc_herb_snowlily.jpg" },
+                    { name: "Rain Poppy", wowheadUrl: "https://www.wowhead.com/mop-classic/item=72237/rain-poppy", icon: "https://wow.zamimg.com/images/wow/icons/large/inv_misc_herb_rainpoppy.jpg" }
+                ],
+                // Milling 5 of these herbs gives pigments with these average yields.
+                // Shadow Pigment: "2-3", "100%, 53%, 46%". Assumed guaranteed 2, plus 53% for a 3rd. The 46% is ignored as it's outside the "2-3" range.
+                // Misty Pigment: "1-3", "22%, 0.7%, 0.8%". Assumed these are probabilities for 1, 2, or 3 pigments. The values are very low.
+                pigments: {
+                    'shadow': { name: "Shadow Pigment", avgYield: (2 + 0.53) },
+                    'misty': { name: "Misty Pigment", avgYield: (1 * 0.22) + (2 * 0.007) + (3 * 0.008) }
+                }
+            }
+        };
+
+        // Data for pigments and inks
+        const productItems = [
+            { name: "Shadow Pigment", wowheadUrl: "https://www.wowhead.com/mop-classic/item=79251/shadow-pigment", icon: "https://wow.zamimg.com/images/wow/icons/large/inv_inscription_pigment_shadow.jpg" },
+            { name: "Misty Pigment", wowheadUrl: "https://www.wowhead.com/mop-classic/item=79253/misty-pigment", icon: "https://wow.zamimg.com/images/wow/icons/large/inv_inscription_pigment_misty.jpg" },
+            { name: "Ink of Dreams", wowheadUrl: "https://www.wowhead.com/mop-classic/spell=111645/ink-of-dreams", icon: "https://wow.zamimg.com/images/wow/icons/large/inv_inscription_ink_dreams.jpg" },
+            { name: "Starlight Ink", wowheadUrl: "https://www.wowhead.com/mop-classic/spell=111646/starlight-ink", icon: "https://wow.zamimg.com/images/wow/icons/large/inv_inscription_ink_starlight.jpg" }
+        ];
+
+        // This function generates the input fields for the herbs.
+        function generateHerbInputs() {
+            const container = document.getElementById('herb-item-inputs');
+            container.innerHTML = '';
+            
+            // Fool's Cap
+            const foolscap = millingData.foolsCap;
+            const foolscapHtml = `
+                <div class="input-group flex items-center space-x-2">
+                    <a href="${foolscap.wowheadUrl}" target="_blank" class="block flex-shrink-0">
+                        <img src="${foolscap.icon}" class="w-12 h-12 rounded-lg" onerror="this.onerror=null;this.src='https://placehold.co/48x48/161b22/c9d1d9?text=N/A';" alt="${foolscap.name} icon">
+                    </a>
+                    <div class="flex flex-col flex-grow">
+                        <label for="priceFoolsCap" class="mb-1 text-sm font-medium">
+                            <a href="${foolscap.wowheadUrl}" target="_blank" class="text-blue-400 hover:underline">${foolscap.name}</a> Price:
+                        </label>
+                        <input type="number" id="priceFoolsCap" class="px-3 py-2 rounded-lg w-full" min="0" value="0">
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', foolscapHtml);
+
+            // Other Herbs
+            millingData.otherHerbs.herbs.forEach(herb => {
+                const herbHtml = `
+                    <div class="input-group flex items-center space-x-2">
+                        <a href="${herb.wowheadUrl}" target="_blank" class="block flex-shrink-0">
+                            <img src="${herb.icon}" class="w-12 h-12 rounded-lg" onerror="this.onerror=null;this.src='https://placehold.co/48x48/161b22/c9d1d9?text=N/A';" alt="${herb.name} icon">
+                        </a>
+                        <div class="flex flex-col flex-grow">
+                            <label for="price${herb.name.replace(/\s+/g, '')}" class="mb-1 text-sm font-medium">
+                                <a href="${herb.wowheadUrl}" target="_blank" class="text-blue-400 hover:underline">${herb.name}</a> Price:
+                            </label>
+                            <input type="number" id="price${herb.name.replace(/\s+/g, '')}" class="px-3 py-2 rounded-lg w-full" min="0" value="0">
+                        </div>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', herbHtml);
+            });
+        }
+
+        // This function generates the input fields for the pigments and inks.
+        function generateProductInputs() {
+            const container = document.getElementById('product-item-inputs');
+            container.innerHTML = '';
+            
+            productItems.forEach(item => {
+                const inputHtml = `
+                    <div class="input-group flex items-center space-x-2">
+                        <a href="${item.wowheadUrl}" target="_blank" class="block flex-shrink-0">
+                            <img src="${item.icon}" class="w-12 h-12 rounded-lg" onerror="this.onerror=null;this.src='https://placehold.co/48x48/161b22/c9d1d9?text=N/A';" alt="${item.name} icon">
+                        </a>
+                        <div class="flex flex-col flex-grow">
+                            <label for="price${item.name.replace(/\s+/g, '')}" class="mb-1 text-sm font-medium">
+                                <a href="${item.wowheadUrl}" target="_blank" class="text-blue-400 hover:underline">${item.name}</a> Price:
+                            </label>
+                            <input type="number" id="price${item.name.replace(/\s+/g, '')}" class="px-3 py-2 rounded-lg w-full" min="0" value="0">
+                        </div>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', inputHtml);
+            });
+        }
+
+        // This function handles the parsing of the Auctionator text input.
+        function importPrices() {
+            const importBox = document.getElementById('import-box');
+            const statusMessage = document.getElementById('import-status');
+            const lines = importBox.value.trim().split('\n');
+            
+            // Map item names to their input element IDs for quick lookup
+            const itemMap = new Map();
+            const allItems = [millingData.foolsCap, ...millingData.otherHerbs.herbs, ...productItems];
+            allItems.forEach(item => {
+                const name = item.name;
+                const id = `price${name.replace(/\s|'|\//g, '')}`;
+                itemMap.set(name, document.getElementById(id));
+            });
+
+            let updatedCount = 0;
+            for (let i = 1; i < lines.length; i++) { // Start from 1 to skip the header
+                const line = lines[i];
+                if (!line) continue;
+                
+                try {
+                    const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                    const priceInCopper = parseInt(parts[0].replace(/"/g, ''), 10);
+                    const itemName = parts[1].replace(/"/g, '');
+                    
+                    if (itemMap.has(itemName)) {
+                        const inputElement = itemMap.get(itemName);
+                        const priceInGold = priceInCopper / 10000;
+                        inputElement.value = priceInGold.toFixed(2);
+                        updatedCount++;
+                    }
+                } catch (error) {
+                    console.error("Failed to parse line:", line, error);
+                }
+            }
+
+            statusMessage.textContent = `Successfully imported ${updatedCount} prices.`;
+            updateCalculator();
+        }
+        
+        // This function copies the search string to the clipboard
+        function copySearchString() {
+            const statusMessage = document.getElementById('import-status');
+            try {
+                const tempTextarea = document.createElement('textarea');
+                tempTextarea.value = searchString;
+                document.body.appendChild(tempTextarea);
+                tempTextarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(tempTextarea);
+                statusMessage.textContent = 'Search string copied to clipboard!';
+            } catch (err) {
+                console.error('Failed to copy text:', err);
+                statusMessage.textContent = 'Failed to copy search string.';
+            }
+        }
+
+        // This function handles all the calculations and updates the UI.
+        function updateCalculator() {
+            const profitResults = document.getElementById('profit-results');
+            const numHerbs = parseFloat(document.getElementById('numHerbs').value) || 0;
+            const MILLING_HERBS_PER_BATCH = 5;
+
+            // Check if any price is set before calculating
+            const isAnyPriceSet = [...document.querySelectorAll('input[type="number"]')].some(input => parseFloat(input.value) > 0);
+            
+            if (!isAnyPriceSet || numHerbs < MILLING_HERBS_PER_BATCH) {
+                profitResults.innerHTML = '<p class="text-sm">Please enter prices and a number of herbs (at least 5) to see the full analysis.</p>';
+                // If there are existing cards, clear them.
+                const existingCards = profitResults.querySelectorAll('.card');
+                if (existingCards.length > 0) {
+                    profitResults.innerHTML = '';
+                    const placeholder = document.createElement('p');
+                    placeholder.className = 'text-sm';
+                    placeholder.textContent = 'Enter prices to see the potential profit from milling and crafting inks.';
+                    profitResults.appendChild(placeholder);
+                }
+                return;
+            }
+
+            // Get product prices
+            const shadowPigmentPrice = parseFloat(document.getElementById('priceShadowPigment').value) || 0;
+            const mistyPigmentPrice = parseFloat(document.getElementById('priceMistyPigment').value) || 0;
+            const inkOfDreamsPrice = parseFloat(document.getElementById('priceInkofDreams').value) || 0;
+            const starlightInkPrice = parseFloat(document.getElementById('priceStarlightInk').value) || 0;
+
+            // Clear previous results
+            profitResults.innerHTML = '';
+            
+            // Loop through each herb type and calculate profit
+            const herbsToMill = numHerbs;
+            const millingBatches = herbsToMill / MILLING_HERBS_PER_BATCH;
+            
+            // Fool's Cap
+            const foolsCapPrice = parseFloat(document.getElementById('priceFoolsCap').value) || 0;
+            if (foolsCapPrice > 0) {
+                const totalHerbCost = foolsCapPrice * herbsToMill;
+                const shadowPigmentsYield = millingBatches * millingData.foolsCap.pigments.shadow.avgYield;
+                const mistyPigmentsYield = millingBatches * millingData.foolsCap.pigments.misty.avgYield;
+                const inkOfDreamsYield = shadowPigmentsYield / 2;
+                const starlightInkYield = mistyPigmentsYield / 2;
+                
+                const revenueFromPigments = (shadowPigmentsYield * shadowPigmentPrice) + (mistyPigmentsYield * mistyPigmentPrice);
+                const revenueFromInks = (inkOfDreamsYield * inkOfDreamsPrice) + (starlightInkYield * starlightInkPrice);
+                
+                const profitFromPigments = revenueFromPigments - totalHerbCost;
+                const profitFromInks = revenueFromInks - totalHerbCost;
+                
+                const foolsCapHtml = `
+                    <div class="card p-4 rounded-lg bg-[#21262d]">
+                        <h3 class="text-lg font-bold flex items-center mb-2">
+                            <img src="${millingData.foolsCap.icon}" class="w-8 h-8 rounded-lg mr-2" alt="${millingData.foolsCap.name} icon">
+                            <a href="${millingData.foolsCap.wowheadUrl}" target="_blank" class="text-blue-400 hover:underline">${millingData.foolsCap.name}</a>
+                        </h3>
+                        <p class="text-sm">Cost to mill ${herbsToMill} herbs: <span class="font-bold text-white">${totalHerbCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span> Gold.</p>
+                        <p class="text-sm mt-1">Average yield: ${shadowPigmentsYield.toFixed(2)} Shadow Pigments, ${mistyPigmentsYield.toFixed(2)} Misty Pigments.</p>
+                        <div class="mt-4 pt-2">
+                            <p class="text-sm font-bold">Reselling Pigments:
+                                <span class="${profitFromPigments >= 0 ? 'profit' : 'loss'} ml-1">
+                                    ${profitFromPigments.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Gold
+                                </span>
+                            </p>
+                            <p class="text-sm font-bold mt-2">Crafting and Selling Inks:
+                                <span class="${profitFromInks >= 0 ? 'profit' : 'loss'} ml-1">
+                                    ${profitFromInks.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Gold
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                `;
+                profitResults.insertAdjacentHTML('beforeend', foolsCapHtml);
+            }
+
+            // Other Herbs
+            const otherHerbs = millingData.otherHerbs.herbs;
+            for (const herb of otherHerbs) {
+                const herbPrice = parseFloat(document.getElementById(`price${herb.name.replace(/\s+/g, '')}`).value) || 0;
+                if (herbPrice > 0) {
+                    const totalHerbCost = herbPrice * herbsToMill;
+                    const shadowPigmentsYield = millingBatches * millingData.otherHerbs.pigments.shadow.avgYield;
+                    const mistyPigmentsYield = millingBatches * millingData.otherHerbs.pigments.misty.avgYield;
+                    const inkOfDreamsYield = shadowPigmentsYield / 2;
+                    const starlightInkYield = mistyPigmentsYield / 2;
+                    
+                    const revenueFromPigments = (shadowPigmentsYield * shadowPigmentPrice) + (mistyPigmentsYield * mistyPigmentPrice);
+                    const revenueFromInks = (inkOfDreamsYield * inkOfDreamsPrice) + (starlightInkYield * starlightInkPrice);
+                    
+                    const profitFromPigments = revenueFromPigments - totalHerbCost;
+                    const profitFromInks = revenueFromInks - totalHerbCost;
+
+                    const otherHerbHtml = `
+                        <div class="card p-4 rounded-lg bg-[#21262d]">
+                            <h3 class="text-lg font-bold flex items-center mb-2">
+                                <img src="${herb.icon}" class="w-8 h-8 rounded-lg mr-2" alt="${herb.name} icon">
+                                <a href="${herb.wowheadUrl}" target="_blank" class="text-blue-400 hover:underline">${herb.name}</a>
+                            </h3>
+                            <p class="text-sm">Cost to mill ${herbsToMill} herbs: <span class="font-bold text-white">${totalHerbCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span> Gold.</p>
+                            <p class="text-sm mt-1">Average yield: ${shadowPigmentsYield.toFixed(2)} Shadow Pigments, ${mistyPigmentsYield.toFixed(2)} Misty Pigments.</p>
+                            <div class="mt-4 pt-2">
+                                <p class="text-sm font-bold">Reselling Pigments:
+                                    <span class="${profitFromPigments >= 0 ? 'profit' : 'loss'} ml-1">
+                                        ${profitFromPigments.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Gold
+                                    </span>
+                                </p>
+                                <p class="text-sm font-bold mt-2">Crafting and Selling Inks:
+                                    <span class="${profitFromInks >= 0 ? 'profit' : 'loss'} ml-1">
+                                        ${profitFromInks.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Gold
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+                    `;
+                    profitResults.insertAdjacentHTML('beforeend', otherHerbHtml);
+                }
+            }
+        }
+
+        // Initialize inputs and add event listeners
+        window.onload = function() {
+            generateHerbInputs();
+            generateProductInputs();
+            document.getElementById('import-btn').addEventListener('click', importPrices);
+            document.getElementById('copy-search-string-btn').addEventListener('click', copySearchString);
+            
+            // Add listeners for all dynamically generated inputs and the number of herbs input
+            const allInputs = document.querySelectorAll('input[type="number"]');
+            allInputs.forEach(input => {
+                input.addEventListener('input', updateCalculator);
+            });
+            document.getElementById('numHerbs').addEventListener('input', updateCalculator);
+
+            updateCalculator(); // Initial calculation on page load
+        };
+    </script>
+</body>
+</html>
