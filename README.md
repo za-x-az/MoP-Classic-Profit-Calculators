@@ -2,12 +2,13 @@
 
 Full Disclosure, this project is primarily made with the help of Google's Gemini, as I don't have the skills to do this myself.  
   
-Images borrowed from WoWhead.com  
+Images borrowed from WoWhead.com<br><br>  
   
-This project is made and maintained by Zaximus-MirageRaceway EU  
   
-
 If something is not working, or you have an idea for another calculator, hit me up in-game or raise an issue here on GitHub.  
+This project is made and maintained by Zaximus-MirageRaceway EU  <br><br>
+  
+  
   
 ## Profit calculators for different professions and or conversions in MoP.  
   
