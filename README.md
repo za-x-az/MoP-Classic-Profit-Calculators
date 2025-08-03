@@ -12,8 +12,7 @@ If somethign is not working, or you have an idear for another calculator hit me 
 ## Profit calculators for different proffesions and or conversions in MoP.  
   
 ### IronPaw Tokens:  
-https://za-x-az.github.io/MoP-Classic-Ironpaw-Calculator/  
-
+https://za-x-az.github.io/MoP-Classic-Profit-Calculators/IronPaw-Token/IronPaw_Token.html  
 ### Milling:
 Comming soon.  
 
