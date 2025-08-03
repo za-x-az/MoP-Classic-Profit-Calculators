@@ -21,3 +21,21 @@ https://za-x-az.github.io/MoP-Classic-Profit-Calculators/IronPaw-Token/IronPaw_T
 Coming soon.  
 <br><br> Glyphs:
 https://za-x-az.github.io/MoP-Classic-Profit-Calculators/Inscription/Glyphs.html  
+
+
+<br>  
+<br>  
+<br>  
+<br>  
+
+
+
+## How to use the calculators
+
+All calculators function in a similar way. You can enter prices manually or use data from Auctionator search results.  
+
+Each calculator page provides an import string for the required shopping list. Use this string with Auctionator to run a search in-game. Then, export the search results and paste them into the input box on the calculator page to automatically fill in prices.  
+
+Note: Due to limitations, the tool only captures the lowest available price. This means results may vary depending on market conditions.  
+
+Some shopping lists—especially those with many items—may be split into smaller sections. This helps improve speed and ensures you get key data like trade goods faster, which are often more volatile in price.  
