@@ -11,11 +11,12 @@ This project is made and maintained by Zaximus-MirageRaceway EU  <br><br>
   
   
 ## Profit calculators for different professions and or conversions in MoP.  
-  
-### IronPaw Tokens:  
-https://za-x-az.github.io/MoP-Classic-Profit-Calculators/IronPaw-Token/IronPaw_Token.html  
-### Milling:
-Coming soon.  
+### Disclaimer: This tool is provided "as is" with no guarantees. I am not responsible for any loss of gold or in-game resources resulting from errors, bugs, or incorrect calculations. Use at your own risk.  <br>
 
-### Glyphs:
+  
+<br><br> IronPaw Tokens:  
+https://za-x-az.github.io/MoP-Classic-Profit-Calculators/IronPaw-Token/IronPaw_Token.html  
+<br><br> Milling:
+Coming soon.  
+<br><br> Glyphs:
 https://za-x-az.github.io/MoP-Classic-Profit-Calculators/Inscription/Glyphs.html  
