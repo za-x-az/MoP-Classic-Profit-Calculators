@@ -19,7 +19,7 @@ This project is made and maintained by Zaximus-MirageRaceway EU  <br><br>
 https://za-x-az.github.io/MoP-Classic-Profit-Calculators/IronPaw-Token/IronPaw_Token.html  
 <br><br> Milling:
 Coming soon.  
-<br><br> Glyphs:
+<br><br> Glyphs:  
 https://za-x-az.github.io/MoP-Classic-Profit-Calculators/Inscription/Glyphs.html  
 
 
