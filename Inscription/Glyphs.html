@@ -113,9 +113,11 @@
             <p class="text-sm mb-4 text-gray-400">This tool helps you find the most profitable glyphs to craft by comparing the cost of buying herbs, milling them into inks, and buying the inks directly from the Auction House. Follow the steps below to get started.</p>
             
             <h3 class="text-xl font-bold mb-2">1. Get Prices from the Auction House</h3>
-            <p class="text-sm mb-4 text-gray-400">Copy the Auctionator shopping list string, import it in-game, scan the AH, and export the results.</p>
-            <div class="flex items-center gap-4 mt-2">
-                <button id="copy-search-string-btn-instructions" class="btn px-4 py-2 rounded-lg font-bold">Copy Auctionator Shopping List</button>
+            <p class="text-sm mb-4 text-gray-400">Use one of the buttons below to generate an Auctionator shopping list. Copy it, import it in-game, scan the AH, and export the results to a string.</p>
+            <div class="flex flex-wrap gap-4 mt-2">
+                <button id="copy-all-list-btn" class="btn px-4 py-2 rounded-lg font-bold">Copy All Items List</button>
+                <button id="copy-glyphs-list-btn" class="btn px-4 py-2 rounded-lg font-bold">Copy Glyphs List</button>
+                <button id="copy-materials-list-btn" class="btn px-4 py-2 rounded-lg font-bold">Copy Materials List</button>
             </div>
 
             <h3 class="text-xl font-bold mt-6 mb-2">2. Import Prices into the Calculator</h3>
@@ -735,13 +737,12 @@
             glyphsByClass[glyphClass].push({ name: glyphName, ink: ink });
         }
         const allClasses = Object.keys(glyphsByClass).sort();
+        const allGlyphs = Object.keys(glyphRecipes);
 
         // Object to store current prices from user input or import
         const prices = {};
         allHerbs.concat(allInks).forEach(item => prices[item] = 0);
-        for (const glyphName in glyphRecipes) {
-            prices[glyphName] = 0;
-        }
+        allGlyphs.forEach(item => prices[item] = 0);
 
         // Object to store the calculated cheapest cost for each ink
         const inkCosts = {};
@@ -1015,9 +1016,7 @@
             const itemMap = new Map();
             allHerbs.forEach(item => itemMap.set(item, document.getElementById(`price${item.replace(/[^a-zA-Z0-9]/g, '')}`)));
             allInks.forEach(item => itemMap.set(item, document.getElementById(`price${item.replace(/[^a-zA-Z0-9]/g, '')}`)));
-            for (const glyphName in glyphRecipes) {
-                itemMap.set(glyphName, document.getElementById(`price${glyphName.replace(/[^a-zA-Z0-9]/g, '')}`));
-            }
+            allGlyphs.forEach(item => itemMap.set(item, document.getElementById(`price${item.replace(/[^a-zA-Z0-9]/g, '')}`)));
 
             let updatedCount = 0;
             for (let i = 1; i < lines.length; i++) {
@@ -1045,20 +1044,12 @@
         }
 
         /**
-         * Creates and copies a list of all items to search for in Auctionator.
+         * Generic function to copy a list of items to the clipboard in Auctionator format.
+         * @param {Array<string>} itemsToSearch The array of item names.
+         * @param {string} listName The name of the list to display in the status message.
          */
-        function copySearchString() {
+        function copyItemsToClipboard(itemsToSearch, listName) {
             const statusMessage = document.getElementById('import-status');
-            const itemsToSearch = [];
-            
-            // Add all herbs, inks, and glyphs to the search list
-            allHerbs.forEach(herb => itemsToSearch.push(herb));
-            allInks.forEach(ink => itemsToSearch.push(ink));
-            for (const glyphName in glyphRecipes) {
-                itemsToSearch.push(glyphName);
-            }
-
-            // Correctly format the search string for Auctionator based on user feedback
             const searchString = `Inscription Items^"${itemsToSearch.join('"^"')}"`;
 
             try {
@@ -1068,11 +1059,34 @@
                 tempTextarea.select();
                 document.execCommand('copy');
                 document.body.removeChild(tempTextarea);
-                statusMessage.textContent = 'Auctionator shopping list copied to clipboard!';
+                statusMessage.textContent = `${listName} copied to clipboard!`;
             } catch (err) {
                 console.error('Failed to copy text:', err);
-                statusMessage.textContent = 'Failed to copy search string.';
+                statusMessage.textContent = `Failed to copy ${listName}.`;
             }
+        }
+
+        /**
+         * Event handler for the "Copy All Items" button.
+         */
+        function copyAllItemsList() {
+            const itemsToSearch = allHerbs.concat(allInks).concat(allGlyphs);
+            copyItemsToClipboard(itemsToSearch, "All Items list");
+        }
+
+        /**
+         * Event handler for the "Copy Glyphs List" button.
+         */
+        function copyGlyphsList() {
+            copyItemsToClipboard(allGlyphs, "Glyphs list");
+        }
+
+        /**
+         * Event handler for the "Copy Materials List" button.
+         */
+        function copyMaterialsList() {
+            const materials = allHerbs.concat(allInks);
+            copyItemsToClipboard(materials, "Materials list");
         }
 
         // --- INITIALIZATION ---
@@ -1083,7 +1097,9 @@
             generateGlyphSections();
 
             document.getElementById('import-btn').addEventListener('click', importPrices);
-            document.getElementById('copy-search-string-btn-instructions').addEventListener('click', copySearchString);
+            document.getElementById('copy-all-list-btn').addEventListener('click', copyAllItemsList);
+            document.getElementById('copy-glyphs-list-btn').addEventListener('click', copyGlyphsList);
+            document.getElementById('copy-materials-list-btn').addEventListener('click', copyMaterialsList);
             document.getElementById('min-profit').addEventListener('input', updateCalculator);
 
             // Add event listeners to all newly created input fields
