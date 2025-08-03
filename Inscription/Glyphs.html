@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WoW Inscription Profit Calculator</title>
+    <!-- Tailwind CSS for a clean, modern aesthetic -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom styling for a dark theme */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a; /* Dark blue-gray background */
+            color: #e2e8f0; /* Light gray text */
+        }
+        .card {
+            background-color: #1e293b; /* Slightly lighter card background */
+            border: 1px solid #334155; /* Darker border for contrast */
+            border-radius: 0.75rem; /* Rounded corners for a modern feel */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        input[type="number"], textarea {
+            background-color: #334155; /* Even darker input background */
+            border-color: #475569;
+            color: #f8fafc; /* White text for contrast */
+        }
+        .btn {
+            background-color: #475569;
+            color: #e2e8f0;
+            border: 1px solid #64748b;
+            transition: all 0.2s;
+        }
+        .btn:hover {
+            background-color: #64748b;
+        }
+        .btn-primary {
+            background-color: #3b82f6; /* A nice blue for the primary button */
+            color: #ffffff;
+            border: none;
+        }
+        .btn-primary:hover {
+            background-color: #2563eb;
+        }
+        .profit {
+            color: #34d399; /* Tailwind's emerald-400 */
+        }
+        .loss {
+            color: #f87171; /* Tailwind's red-400 */
+        }
+        /* Custom styles for collapsible sections (details/summary) */
+        details > summary {
+            list-style: none;
+        }
+        details > summary::-webkit-details-marker {
+            display: none;
+        }
+        details > summary {
+            cursor: pointer;
+            position: relative;
+            padding-left: 2rem;
+            transition: color 0.2s;
+        }
+        details > summary::before {
+            content: '+';
+            font-size: 1.5rem;
+            line-height: 1.5rem;
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            transition: transform 0.2s ease-in-out;
+        }
+        details[open] > summary::before {
+            content: '-';
+            transform: translateY(-50%);
+        }
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+        }
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: #1e293b;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px 0;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="p-6">
+    <div class="container mx-auto max-w-7xl">
+        <h1 class="text-4xl font-bold mb-8 text-center text-white">WoW Inscription Profit Calculator</h1>
+
+        <!-- Instructions Section -->
+        <div class="card p-6 mb-8">
+            <h2 class="text-2xl font-bold mb-4">Quick Guide</h2>
+            <p class="text-sm mb-4 text-gray-400">This tool helps you find the most profitable glyphs to craft by comparing the cost of buying herbs, milling them into inks, and buying the inks directly from the Auction House. Follow the steps below to get started.</p>
+            
+            <h3 class="text-xl font-bold mb-2">1. Get Prices from the Auction House</h3>
+            <p class="text-sm mb-4 text-gray-400">Copy the Auctionator shopping list string, import it in-game, scan the AH, and export the results.</p>
+            <div class="flex items-center gap-4 mt-2">
+                <button id="copy-search-string-btn-instructions" class="btn px-4 py-2 rounded-lg font-bold">Copy Auctionator Shopping List</button>
+            </div>
+
+            <h3 class="text-xl font-bold mt-6 mb-2">2. Import Prices into the Calculator</h3>
+            <p class="text-sm mb-2 text-gray-400">Paste your exported data here. The calculator will automatically update all prices and calculations.</p>
+            <div class="flex items-center gap-4">
+                <textarea id="import-box" class="flex-grow h-24 px-3 py-2 rounded-lg text-sm" placeholder="Paste your Auctionator data here..."></textarea>
+                <button id="import-btn" class="btn btn-primary px-6 py-2 rounded-lg font-bold whitespace-nowrap">Import Prices</button>
+            </div>
+            <p id="import-status" class="text-sm text-center mt-4 text-gray-400"></p>
+        </div>
+
+        <!-- Collapsible Price Inputs Section -->
+        <div class="grid lg:grid-cols-2 gap-8 mb-8">
+            <!-- Herb Prices Input -->
+            <details class="card p-6" open>
+                <summary class="text-2xl font-bold text-white mb-4">Herb Prices</summary>
+                <p class="text-sm text-gray-400 mb-4">Enter AH prices for herbs. Milling costs are auto-calculated.</p>
+                <div id="herb-inputs" class="space-y-4">
+                    <!-- Herb inputs generated by JS -->
+                </div>
+            </details>
+
+            <!-- Ink Prices Input -->
+            <details class="card p-6" open>
+                <summary class="text-2xl font-bold text-white mb-4">Ink Prices</summary>
+                <p class="text-sm text-gray-400 mb-4">Enter AH prices for inks. The cheapest cost is auto-calculated.</p>
+                <div id="ink-inputs" class="space-y-4">
+                    <!-- Ink inputs generated by JS -->
+                </div>
+            </details>
+        </div>
+
+        <!-- Minimum Profit Filter (now a full-width box) -->
+        <div class="card p-6 mb-8 w-full">
+            <h2 class="text-2xl font-bold mb-4">Minimum Profit</h2>
+            <p class="text-sm text-gray-400 mb-4">Only shows glyphs that meet this profit target.</p>
+            <div class="flex items-center gap-4 w-full">
+                <label for="min-profit" class="text-lg font-bold text-white whitespace-nowrap">Minimum Profit (Gold):</label>
+                <input type="number" id="min-profit" class="px-3 py-2 rounded-lg w-full" min="0" value="0">
+            </div>
+        </div>
+
+        <!-- Glyph Results Section -->
+        <div class="results-container space-y-6">
+            <h2 class="text-3xl font-bold mb-6 text-center text-white">Glyph Profit Analysis by Class</h2>
+            <p class="text-sm text-gray-400 mb-4 text-center">**Note:** Glyph class and ink requirements are a best-effort mapping. Please verify this data in the JavaScript code for your specific game version.</p>
+
+            <div id="glyph-results">
+                <!-- Glyph results grouped by class will be generated here by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA DEFINITION ---
+
+        // Helper to convert copper to gold for calculations
+        function copperToGold(copper) {
+            return copper / 10000;
+        }
+
+        const AH_CUT_PERCENTAGE = 0.05; // Standard 5% Auction House cut
+
+        // Data for herbs and their milling yields.
+        // A standard milling rate is assumed: 5 herbs -> ~2 common pigments.
+        const herbMillingData = [
+            // Vanilla
+            { name: "Peacebloom", expansion: "Vanilla", pigments: [{ name: "Ivory Pigment", rate: 0.4 }] },
+            { name: "Silverleaf", expansion: "Vanilla", pigments: [{ name: "Ivory Pigment", rate: 0.4 }] },
+            { name: "Earthroot", expansion: "Vanilla", pigments: [{ name: "Ivory Pigment", rate: 0.4 }] },
+            { name: "Mageroyal", expansion: "Vanilla", pigments: [{ name: "Golden Pigment", rate: 0.4 }] },
+            { name: "Briarthorn", expansion: "Vanilla", pigments: [{ name: "Golden Pigment", rate: 0.4 }] },
+            { name: "Stranglethorn Thistle", expansion: "Vanilla", pigments: [{ name: "Golden Pigment", rate: 0.4 }] },
+            { name: "Bruiseweed", expansion: "Vanilla", pigments: [{ name: "Golden Pigment", rate: 0.4 }] },
+            { name: "Wild Steelbloom", expansion: "Vanilla", pigments: [{ name: "Golden Pigment", rate: 0.4 }] },
+            { name: "Kingsblood", expansion: "Vanilla", pigments: [{ name: "Golden Pigment", rate: 0.4 }] },
+            { name: "Liferoot", expansion: "Vanilla", pigments: [{ name: "Golden Pigment", rate: 0.4 }] },
+            { name: "Goldthorn", expansion: "Vanilla", pigments: [{ name: "Emerald Pigment", rate: 0.4 }] },
+            { name: "Khadgar's Whisker", expansion: "Vanilla", pigments: [{ name: "Emerald Pigment", rate: 0.4 }] },
+            { name: "Wintersbite", expansion: "Vanilla", pigments: [{ name: "Emerald Pigment", rate: 0.4 }] },
+            { name: "Firebloom", expansion: "Vanilla", pigments: [{ name: "Emerald Pigment", rate: 0.4 }] },
+            { name: "Purple Lotus", expansion: "Vanilla", pigments: [{ name: "Violet Pigment", rate: 0.4 }] },
+            { name: "Sungrass", expansion: "Vanilla", pigments: [{ name: "Violet Pigment", rate: 0.4 }] },
+            { name: "Gromsblood", expansion: "Vanilla", pigments: [{ name: "Violet Pigment", rate: 0.4 }] },
+            { name: "Golden Sansam", expansion: "Vanilla", pigments: [{ name: "Violet Pigment", rate: 0.4 }] },
+            { name: "Dreamfoil", expansion: "Vanilla", pigments: [{ name: "Violet Pigment", rate: 0.4 }] },
+            { name: "Mountain Silversage", expansion: "Vanilla", pigments: [{ name: "Violet Pigment", rate: 0.4 }] },
+            { name: "Plaguebloom", expansion: "Vanilla", pigments: [{ name: "Violet Pigment", rate: 0.4 }] },
+            { name: "Icecap", expansion: "Vanilla", pigments: [{ name: "Violet Pigment", rate: 0.4 }] },
+            // TBC
+            { name: "Felweed", expansion: "TBC", pigments: [{ name: "Silver Pigment", rate: 0.4 }] },
+            { name: "Dreaming Glory", expansion: "TBC", pigments: [{ name: "Silver Pigment", rate: 0.4 }] },
+            { name: "Ragveil", expansion: "TBC", pigments: [{ name: "Silver Pigment", rate: 0.4 }] },
+            { name: "Flame Cap", expansion: "TBC", pigments: [{ name: "Nether Pigment", rate: 0.4 }] },
+            { name: "Netherbloom", expansion: "TBC", pigments: [{ name: "Nether Pigment", rate: 0.4 }] },
+            { name: "Mana Thistle", expansion: "TBC", pigments: [{ name: "Nether Pigment", rate: 0.4 }] },
+            { name: "Terocone", expansion: "TBC", pigments: [{ name: "Nether Pigment", rate: 0.4 }] },
+            { name: "Ancient Lichen", expansion: "TBC", pigments: [{ name: "Nether Pigment", rate: 0.4 }] },
+            { name: "Smasher's Blood", expansion: "TBC", pigments: [{ name: "Nether Pigment", rate: 0.4 }] },
+            // WotLK
+            { name: "Goldclover", expansion: "WotLK", pigments: [{ name: "Azure Pigment", rate: 0.4 }] },
+            { name: "Tiger Lily", expansion: "WotLK", pigments: [{ name: "Azure Pigment", rate: 0.4 }] },
+            { name: "Talandra's Rose", expansion: "WotLK", pigments: [{ name: "Azure Pigment", rate: 0.4 }] },
+            { name: "Deadnettle", expansion: "WotLK", pigments: [{ name: "Icy Pigment", rate: 0.4 }] },
+            { name: "Adder's Tongue", expansion: "WotLK", pigments: [{ name: "Icy Pigment", rate: 0.4 }] },
+            { name: "Icethorn", expansion: "WotLK", pigments: [{ name: "Icy Pigment", rate: 0.4 }] },
+            { name: "Lichbloom", expansion: "WotLK", pigments: [{ name: "Icy Pigment", rate: 0.4 }] },
+            // Cataclysm
+            { name: "Cinderbloom", expansion: "Cataclysm", pigments: [{ name: "Ashen Pigment", rate: 0.4 }] },
+            { name: "Azshara's Veil", expansion: "Cataclysm", pigments: [{ name: "Ashen Pigment", rate: 0.4 }] },
+            { name: "Whiptail", expansion: "Cataclysm", pigments: [{ name: "Ashen Pigment", rate: 0.4 }] },
+            { name: "Stormvine", expansion: "Cataclysm", pigments: [{ name: "Burning Embers", rate: 0.4 }] },
+            { name: "Twilight Jasmine", expansion: "Cataclysm", pigments: [{ name: "Burning Embers", rate: 0.4 }] },
+            { name: "Heartblossom", expansion: "Cataclysm", pigments: [{ name: "Burning Embers", rate: 0.4 }] },
+            // MoP
+            { name: "Green Tea Leaf", expansion: "MoP", pigments: [{ name: "Verdant Pigment", rate: 0.4 }, { name: "Shadow Pigment", rate: 0.05 }] },
+            { name: "Rain Poppy", expansion: "MoP", pigments: [{ name: "Verdant Pigment", rate: 0.4 }, { name: "Shadow Pigment", rate: 0.05 }] },
+            { name: "Silkweed", expansion: "MoP", pigments: [{ name: "Verdant Pigment", rate: 0.4 }, { name: "Shadow Pigment", rate: 0.05 }] },
+            { name: "Snow Lily", expansion: "MoP", pigments: [{ name: "Verdant Pigment", rate: 0.4 }, { name: "Shadow Pigment", rate: 0.05 }] },
+            { name: "Fool's Cap", expansion: "MoP", pigments: [{ name: "Verdant Pigment", rate: 0.4 }, { name: "Shadow Pigment", rate: 0.05 }] },
+            { name: "Golden Lotus", expansion: "MoP", pigments: [{ name: "Shadow Pigment", rate: 0.4 }] },
+        ];
+
+        // Recipes for converting pigments to inks (e.g., 2 common pigments -> 1 ink)
+        const pigmentToInkRecipes = {
+            "Ivory Pigment": { ink: "Midnight Ink", quantity: 2 },
+            "Golden Pigment": { ink: "Lion's Ink", quantity: 2 },
+            "Emerald Pigment": { ink: "Jadefire Ink", quantity: 2 },
+            "Violet Pigment": { ink: "Royal Ink", quantity: 2 },
+
+            "Silver Pigment": { ink: "Celestial Ink", quantity: 2 },
+            "Nether Pigment": { ink: "Ethereal Ink", quantity: 2 },
+
+            "Azure Pigment": { ink: "Ink of the Sea", quantity: 2 },
+            "Icy Pigment": { ink: "Snowfall Ink", quantity: 2 },
+
+            "Ashen Pigment": { ink: "Blackfallow Ink", quantity: 2 },
+            "Burning Embers": { ink: "Inferno Ink", quantity: 2 },
+
+            "Verdant Pigment": { ink: "Ink of Dreams", quantity: 2 },
+        };
+
+        // Ink conversion rates (MoP ink can be converted down 1:1 to older inks)
+        const inkConversionRates = {
+            "Ink of Dreams": [
+                "Blackfallow Ink", "Inferno Ink", "Ink of the Sea", "Snowfall Ink",
+                "Celestial Ink", "Ethereal Ink", "Midnight Ink", "Lion's Ink",
+                "Jadefire Ink", "Royal Ink"
+            ]
+        };
+
+        const allHerbs = herbMillingData.map(h => h.name);
+        const allInks = Object.values(pigmentToInkRecipes).map(r => r.ink)
+                            .concat(Object.keys(inkConversionRates))
+                            .filter((value, index, self) => self.indexOf(value) === index); // Unique inks
+
+        // Hardcoded glyph data with assumed classes and required inks
+        // **IMPORTANT**: You should verify and complete this list for accuracy based on your game version.
+        const glyphRecipes = {
+            "Glyph of Regenerative Magic": { class: "Mage", ink: "Ink of Dreams" },
+            "Glyph of Stars": { class: "Druid", ink: "Ink of Dreams" },
+            "Glyph of Animal Bond": { class: "Hunter", ink: "Ink of Dreams" },
+            "Glyph of Bull Rush": { class: "Warrior", ink: "Ink of Dreams" },
+            "Glyph of Death From Above": { class: "Rogue", ink: "Ink of Dreams" },
+            "Glyph of the Loud Horn": { class: "Death Knight", ink: "Ink of the Sea" },
+            "Glyph of Solace": { class: "Priest", ink: "Ink of Dreams" },
+            "Glyph of the Unbound Elemental": { class: "Shaman", ink: "Ink of Dreams" },
+            "Glyph of Zen Flight": { class: "Monk", ink: "Ink of Dreams" },
+            "Glyph of Hemorrhaging Veins": { class: "Rogue", ink: "Ink of Dreams" },
+            "Glyph of Efflorescence": { class: "Druid", ink: "Ink of Dreams" },
+            "Glyph of Deterrence": { class: "Hunter", ink: "Ink of Dreams" },
+            "Glyph of Colossus Smash": { class: "Warrior", ink: "Ink of Dreams" },
+            "Glyph of Aspect of the Cheetah": { class: "Hunter", ink: "Ink of Dreams" },
+            "Glyph of Splitting Ice": { class: "Mage", ink: "Ink of Dreams" },
+            "Glyph of Festering Blood": { class: "Death Knight", ink: "Ink of Dreams" },
+            "Glyph of the Spectral Wolf": { class: "Shaman", ink: "Ink of Dreams" },
+            "Glyph of Enduring Healing Sphere": { class: "Monk", ink: "Ink of Dreams" },
+            "Glyph of Deluge": { class: "Shaman", ink: "Ink of Dreams" },
+            "Glyph of Outbreak": { class: "Death Knight", ink: "Ink of Dreams" },
+            "Glyph of Deadly Momentum": { class: "Rogue", ink: "Ink of Dreams" },
+            "Glyph of Enraged Speed": { class: "Warrior", ink: "Ink of Dreams" },
+            "Glyph of the Sprouting Mushroom": { class: "Druid", ink: "Ink of Dreams" },
+            "Glyph of Blitz": { class: "Warrior", ink: "Ink of Dreams" },
+            "Glyph of Sparring": { class: "Warrior", ink: "Ink of Dreams" },
+            "Glyph of Pathfinding": { class: "Hunter", ink: "Ink of Dreams" },
+            "Glyph of Anti-Magic Shell": { class: "Death Knight", ink: "Ink of Dreams" },
+            "Glyph of One With Nature": { class: "Druid", ink: "Ink of Dreams" },
+            "Glyph of Eternal Resolve": { class: "Warlock", ink: "Ink of Dreams" },
+            "Glyph of Fae Silence": { class: "Druid", ink: "Ink of Dreams" },
+            "Glyph of Demon Hunting": { class: "Warlock", ink: "Ink of Dreams" },
+            "Glyph of Fortuitous Spheres": { class: "Monk", ink: "Ink of Dreams" },
+            "Glyph of Telluric Currents": { class: "Shaman", ink: "Ink of Dreams" },
+            "Glyph of Winged Vengeance": { class: "Paladin", ink: "Ink of Dreams" },
+            "Glyph Ability": { class: "Warlock", ink: "Ink of Dreams" }, // Assuming a glyph for Warlocks
+            "Glyph of Afterlife": { class: "Paladin", ink: "Ink of Dreams" },
+            "Glyph of Aimed Shot": { class: "Hunter", ink: "Ink of Dreams" },
+            "Glyph of Ambush": { class: "Rogue", ink: "Ink of Dreams" },
+            "Glyph of Angels": { class: "Priest", ink: "Ink of Dreams" },
+            "Glyph of Aquatic Form": { class: "Druid", ink: "Ink of Dreams" },
+            "Glyph of Arcane Explosion": { class: "Mage", ink: "Ink of Dreams" },
+            "Glyph of Arcane Language": { class: "Mage", ink: "Ink of Dreams" },
+            "Glyph of Arcane Power": { class: "Mage", ink: "Ink of Dreams" },
+            "Glyph of Armors": { class: "Warrior", ink: "Ink of Dreams" },
+            "Glyph of Army of the Dead": { class: "Death Knight", ink: "Ink of Dreams" },
+            "Glyph of Aspect of the Beast": { class: "Hunter", ink: "Ink of Dreams" },
+            "Glyph of Aspect of the Pack": { class: "Hunter", ink: "Ink of Dreams" },
+            "Glyph of Aspects": { class: "Hunter", ink: "Ink of Dreams" },
+            "Glyph of Astral Fixation": { class: "Shaman", ink: "Ink of Dreams" },
+            "Glyph of Astral Recall": { class: "Shaman", ink: "Ink of Dreams" },
+            "Glyph of Avenging Wrath": { class: "Paladin", ink: "Ink of Dreams" },
+            "Glyph of Barkskin": { class: "Druid", ink: "Ink of Dreams" },
+            "Glyph of Beacon of Light": { class: "Paladin", ink: "Ink of Dreams" },
+            "Glyph of Binding Heal": { class: "Priest", ink: "Ink of Dreams" },
+            "Glyph of Black Ice": { class: "Death Knight", ink: "Ink of Dreams" },
+            "Glyph of Blackout Kick": { class: "Monk", ink: "Ink of Dreams" },
+            "Glyph of Blade Flurry": { class: "Rogue", ink: "Ink of Dreams" },
+            "Glyph of Bladed Judgment": { class: "Paladin", ink: "Ink of Dreams" },
+            "Glyph of Blessed Life": { class: "Paladin", ink: "Ink of Dreams" },
+            "Glyph of Blind": { class: "Rogue", ink: "Ink of Dreams" },
+            "Glyph of Blinding Light": { class: "Paladin", ink: "Ink of Dreams" },
+            "Glyph of Blink": { class: "Mage", ink: "Ink of Dreams" },
+            "Glyph of Bloodcurdling Shout": { class: "Warrior", ink: "Ink of Dreams" },
+            "Glyph of Bloodthirst": { class: "Warrior", ink: "Ink of Dreams" },
+            "Glyph of Bloody Healing": { class: "Death Knight", ink: "Ink of Dreams" },
+            "Glyph of Blooming": { class: "Druid", ink: "Ink of Dreams" },
+            "Glyph of Blurred Speed": { class: "Monk", ink: "Ink of Dreams" },
+            "Glyph of Borrowed Time": { class: "Priest", ink: "Ink of Dreams" },
+            "Glyph of Breath of Fire": { class: "Monk", ink: "Ink of Dreams" },
+            "Glyph of Burden of Guilt": { class: "Warlock", ink: "Ink of Dreams" },
+            "Glyph of Burning Anger": { class: "Warlock", ink: "Ink of Dreams" },
+            "Glyph of Camouflage": { class: "Hunter", ink: "Ink of Dreams" },
+            "Glyph of Capacitor Totem": { class: "Shaman", ink: "Ink of Dreams" },
+            "Glyph of Carrion Swarm": { class: "Death Knight", ink: "Ink of Dreams" },
+            "Glyph of Cat Form": { class: "Druid", ink: "Ink of Dreams" },
+            "Glyph of Chain Lightning": { class: "Shaman", ink: "Ink of Dreams" },
+            "Glyph of Chaining": { class: "Death Knight", ink: "Ink of Dreams" },
+            "Glyph of Chains of Ice": { class: "Death Knight", ink: "Ink of Dreams" },
+            "Glyph of Chameleon (NYI)": { class: "Hunter", ink: "Ink of Dreams" },
+            "Glyph of Charm Woodland Creature": { class: "Hunter", ink: "Ink of Dreams" },
+            "Glyph of Cheap Shot": { class: "Rogue", ink: "Ink of Dreams" },
+            "Glyph of Chimera Shot": { class: "Hunter", ink: "Ink of Dreams" },
+            "Glyph of Circle of Healing": { class: "Priest", ink: "Ink of Dreams" },
+            "Glyph of Clash": { class: "Monk", ink: "Ink of Dreams" },
+            "Glyph of Cleansing Waters": { class: "Shaman", ink: "Ink of Dreams" },
+            "Glyph of Cloak of Shadows": { class: "Rogue", ink: "Ink of Dreams" },
+            "Glyph of Combustion": { class: "Mage", ink: "Ink of Dreams" },
+            "Glyph of Condensation": { class: "Shaman", ink: "Ink of Dreams" },
+            "Glyph of Cone of Cold": { class: "Mage", ink: "Ink of Dreams" },
+            "Glyph of Confession": { class: "Priest", ink: "Ink of Dreams" },
+            "Glyph of Conflagrate": { class: "Warlock", ink: "Ink of Dreams" },
+            "Glyph of Conjure Familiar": { class: "Mage", ink: "Ink of Dreams" },
+            "Glyph of Consecration": { class: "Paladin", ink: "Ink of Dreams" },
+            "Glyph of Contemplation": { class: "Priest", ink: "Ink of Dreams" },
+            "Glyph of Corpse Explosion": { class: "Death Knight", ink: "Ink of Dreams" },
+            "Glyph of Counterspell": { class: "Mage", ink: "Ink of Dreams" },
+            "Glyph of Crackling Tiger Lightning": { class: "Monk", ink: "Ink of Dreams" },
+            "Glyph of Crimson Banish": { class: "Warlock", ink: "Ink of Dreams" },
+            "Glyph of Crittermorph": { class: "Mage", ink: "Ink of Dreams" },
+            "Glyph of Crow Feast": { class: "Rogue", ink: "Ink of Dreams" },
+            "Glyph of Curse of Exhaustion": { class: "Warlock", ink: "Ink of Dreams" },
+            "Glyph of Curse of the Elements": { class: "Warlock", ink: "Ink of Dreams" },
+            "Glyph of Cyclone": { class: "Druid", ink: "Ink of Dreams" },
+            "Glyph of Dancing Rune Weapon": { class: "Death Knight", ink: "Ink of Dreams" },
+            "Glyph of Dark Archangel": { class: "Priest", ink: "Ink of Dreams" },
+            "Glyph of Dark Simulacrum": { class: "Death Knight", ink: "Ink of Dreams" },
+            "Glyph of Dark Succor": { class: "Death Knight", ink: "Ink of Dreams" },
+            "Glyph of Dash": { class: "Rogue", ink: "Ink of Dreams" },
+            "Glyph of Dazing Shield": { class: "Paladin", ink: "Ink of Dreams" },
+            "Glyph of Death and Decay": { class: "Death Knight", ink: "Ink of Dreams" },
+            "Glyph of Death Coil": { class: "Death Knight", ink: "Ink of Dreams" },
+            "Glyph of Death Gate": { class: "Death Knight", ink: "Ink of Dreams" },
+            "Glyph of Death Grip": { class: "Death Knight", ink: "Ink of Dreams" },
+            "Glyph of Death's Embrace": { class: "Death Knight", ink: "Ink of Dreams" },
+            "Glyph of Decoy": { class: "Hunter", ink: "Ink of Dreams" },
+            "Glyph of Deep Freeze": { class: "Mage", ink: "Ink of Dreams" },
+            "Glyph of Deep Wells": { class: "Paladin", ink: "Ink of Dreams" },
+            "Glyph of Demon Training": { class: "Warlock", ink: "Ink of Dreams" },
+            "Glyph of Demonic Circle": { class: "Warlock", ink: "Ink of Dreams" },
+            "Glyph of Denounce": { class: "Paladin", ink: "Ink of Dreams" },
+            "Glyph of Detection": { class: "Rogue", ink: "Ink of Dreams" },
+            "Glyph of Detox": { class: "Monk", ink: "Ink of Dreams" },
+            "Glyph of Devotion Aura": { class: "Paladin", ink: "Ink of Dreams" },
+            "Glyph of Die by the Sword": { class: "Warrior", ink: "Ink of Dreams" },
+            "Glyph of Direction": { class: "Hunter", ink: "Ink of Dreams" },
+            "Glyph of Discreet Magic": { class: "Mage", ink: "Ink of Dreams" },
+            "Glyph of Disengage": { class: "Hunter", ink: "Ink of Dreams" },
+            "Glyph of Disguise": { class: "Rogue", ink: "Ink of Dreams" },
+            "Glyph of Dispel Magic": { class: "Priest", ink: "Ink of Dreams" },
+            "Glyph of Dispersion": { class: "Priest", ink: "Ink of Dreams" },
+            "Glyph of Distract": { class: "Rogue", ink: "Ink of Dreams" },
+            "Glyph of Distracting Shot": { class: "Hunter", ink: "Ink of Dreams" },
+            "Glyph of Divine Plea": { class: "Paladin", ink: "Ink of Dreams" },
+            "Glyph of Divine Protection": { class: "Paladin", ink: "Ink of Dreams" },
+            "Glyph of Divine Shield": { class: "Paladin", ink: "Ink of Dreams" },
+            "Glyph of Divine Storm": { class: "Paladin", ink: "Ink of Dreams" },
+            "Glyph of Divinity": { class: "Priest", ink: "Ink of Dreams" },
+            "Glyph of Double Jeopardy": { class: "Rogue", ink: "Ink of Dreams" },
+            "Glyph of Drain Life": { class: "Warlock", ink: "Ink of Dreams" },
+            "Glyph of Elemental Familiars": { class: "Shaman", ink: "Ink of Dreams" },
+            "Glyph of Ember Tap": { class: "Warlock", ink: "Ink of Dreams" },
+            "Glyph of Endless Wrath": { class: "Warlock", ink: "Ink of Dreams" },
+            "Glyph of Enduring Deceit": { class: "Rogue", ink: "Ink of Dreams" },
+            "Glyph of Enduring Infection": { class: "Death Knight", ink: "Ink of Dreams" },
+            "Glyph of Entangling Roots": { class: "Druid", ink: "Ink of Dreams" },
+            "Glyph of Eternal Earth": { class: "Shaman", ink: "Ink of Dreams" },
+            "Glyph of Evaporation": { class: "Shaman", ink: "Ink of Dreams" },
+            "Glyph of Evasion": { class: "Rogue", ink: "Ink of Dreams" },
+            "Glyph of Evocation": { class: "Mage", ink: "Ink of Dreams" },
+            "Glyph of Explosive Trap": { class: "Hunter", ink: "Ink of Dreams" },
+            "Glyph of Expose Armor": { class: "Rogue", ink: "Ink of Dreams" },
+            "Glyph of Eye of Kilrogg": { class: "Warlock", ink: "Ink of Dreams" },
+            "Glyph of Fade": { class: "Priest", ink: "Ink of Dreams" },
+            "Glyph of Faerie Fire": { class: "Druid", ink: "Ink of Dreams" },
+            "Glyph of Falling Meteor": { class: "Mage", ink: "Ink of Dreams" },
+            "Glyph of Far Sight": { class: "Shaman", ink: "Ink of Dreams" },
+            "Glyph of Fear": { class: "Warlock", ink: "Ink of Dreams" },
+            "Glyph of Fear Ward": { class: "Priest", ink: "Ink of Dreams" },
+            "Glyph of Feint": { class: "Rogue", ink: "Ink of Dreams" },
+            "Glyph of Felguard": { class: "Warlock", ink: "Ink of Dreams" },
+            "Glyph of Feral Spirit": { class: "Shaman", ink: "Ink of Dreams" },
+            "Glyph of Ferocious Bite": { class: "Druid", ink: "Ink of Dreams" },
+            "Glyph of Fetch": { class: "Hunter", ink: "Ink of Dreams" },
+            "Glyph of Fighting Pose": { class: "Warrior", ink: "Ink of Dreams" },
+            "Glyph of Final Wrath": { class: "Paladin", ink: "Ink of Dreams" },
+            "Glyph of Fire Elemental Totem": { class: "Shaman", ink: "Ink of Dreams" },
+            "Glyph of Fire From the Heavens": { class: "Mage", ink: "Ink of Dreams" },
+            "Glyph of Fire Nova": { class: "Shaman", ink: "Ink of Dreams" },
+            "Glyph of Fireworks": { class: "Mage", ink: "Ink of Dreams" },
+            "Glyph of Fists of Fury": { class: "Monk", ink: "Ink of Dreams" },
+            "Glyph of Flame Shock": { class: "Shaman", ink: "Ink of Dreams" },
+            "Glyph of Flaming Serpents": { class: "Monk", ink: "Ink of Dreams" },
+            "Glyph of Flash of Light": { class: "Paladin", ink: "Ink of Dreams" },
+            "Glyph of Flying Serpent Kick": { class: "Monk", ink: "Ink of Dreams" },
+            "Glyph of Focus": { class: "Hunter", ink: "Ink of Dreams" },
+            "Glyph of Focused Fire (NYI)": { class: "Hunter", ink: "Ink of Dreams" },
+            "Glyph of Focused Mending": { class: "Priest", ink: "Ink of Dreams" },
+            "Glyph of Focused Shield": { class: "Warrior", ink: "Ink of Dreams" },
+            "Glyph of Fortifying Brew": { class: "Monk", ink: "Ink of Dreams" },
+            "Glyph of Foul Menagerie": { class: "Death Knight", ink: "Ink of Dreams" },
+            "Glyph of Freezing Trap": { class: "Hunter", ink: "Ink of Dreams" },
+            "Glyph of Frenzied Regeneration": { class: "Druid", ink: "Ink of Dreams" },
+            "Glyph of Frost Nova": { class: "Mage", ink: "Ink of Dreams" },
+            "Glyph of Frost Shock": { class: "Shaman", ink: "Ink of Dreams" },
+            "Glyph of Frostfire Bolt": { class: "Mage", ink: "Ink of Dreams" },
+            "Glyph of Gag Order": { class: "Warrior", ink: "Ink of Dreams" },
+            "Glyph of Garrote": { class: "Rogue", ink: "Ink of Dreams" },
+            "Glyph of Gateway Attunement": { class: "Warlock", ink: "Ink of Dreams" },
+            "Glyph of Ghost Wolf": { class: "Shaman", ink: "Ink of Dreams" },
+            "Glyph of Gouge": { class: "Rogue", ink: "Ink of Dreams" },
+            "Glyph of Grace": { class: "Priest", ink: "Ink of Dreams" },
+            "Glyph of Grounding Totem": { class: "Shaman", ink: "Ink of Dreams" },
+            "Glyph of Guard": { class: "Monk", ink: "Ink of Dreams" },
+            "Glyph of Guided Stars": { class: "Druid", ink: "Ink of Dreams" },
+            "Glyph of Gushing Wound": { class: "Warrior", ink: "Ink of Dreams" },
+            "Glyph of Hammer of the Righteous": { class: "Paladin", ink: "Ink of Dreams" },
+            "Glyph of Hamstring": { class: "Warrior", ink: "Ink of Dreams" },
+            "Glyph of Hand of Gul'dan": { class: "Warlock", ink: "Ink of Dreams" },
+            "Glyph of Hand of Sacrifice": { class: "Paladin", ink: "Ink of Dreams" },
+            "Glyph of Harsh Words": { class: "Paladin", ink: "Ink of Dreams" },
+            "Glyph of Havoc": { class: "Warlock", ink: "Ink of Dreams" },
+            "Glyph of Healing Storm": { class: "Shaman", ink: "Ink of Dreams" },
+            "Glyph of Healing Stream Totem": { class: "Shaman", ink: "Ink of Dreams" },
+            "Glyph of Healing Touch": { class: "Druid", ink: "Ink of Dreams" },
+            "Glyph of Healing Wave": { class: "Shaman", ink: "Ink of Dreams" },
+            "Glyph of Health Funnel": { class: "Warlock", ink: "Ink of Dreams" },
+            "Glyph of Healthstone": { class: "Warlock", ink: "Ink of Dreams" },
+            "Glyph of Heavy Repercussions": { class: "Warrior", ink: "Ink of Dreams" },
+            "Glyph of Hemorrhage": { class: "Rogue", ink: "Ink of Dreams" },
+            "Glyph of Hex": { class: "Shaman", ink: "Ink of Dreams" },
+            "Glyph of Hindering Strikes": { class: "Warrior", ink: "Ink of Dreams" },
+            "Glyph of Hoarse Voice": { class: "Warrior", ink: "Ink of Dreams" },
+            "Glyph of Hold the Line": { class: "Warrior", ink: "Ink of Dreams" },
+            "Glyph of Holy Fire": { class: "Priest", ink: "Ink of Dreams" },
+            "Glyph of Holy Resurrection": { class: "Priest", ink: "Ink of Dreams" },
+            "Glyph of Holy Shock": { class: "Paladin", ink: "Ink of Dreams" },
+            "Glyph of Holy Wrath": { class: "Paladin", ink: "Ink of Dreams" },
+            "Glyph of Honor": { class: "Paladin", ink: "Ink of Dreams" },
+            "Glyph of Horn of Winter": { class: "Death Knight", ink: "Ink of Dreams" },
+            "Glyph of Hurricane": { class: "Druid", ink: "Ink of Dreams" },
+            "Glyph of Ice Block": { class: "Mage", ink: "Ink of Dreams" },
+            "Glyph of Ice Trap": { class: "Hunter", ink: "Ink of Dreams" },
+            "Glyph of Icebound Fortitude": { class: "Death Knight", ink: "Ink of Dreams" },
+            "Glyph of Icy Touch": { class: "Death Knight", ink: "Ink of Dreams" },
+            "Glyph of Icy Veins": { class: "Mage", ink: "Ink of Dreams" },
+            "Glyph of Illumination": { class: "Paladin", ink: "Ink of Dreams" },
+            "Glyph of Illusion": { class: "Mage", ink: "Ink of Dreams" },
+            "Glyph of Immediate Truth": { class: "Paladin", ink: "Ink of Dreams" },
+            "Glyph of Imp Swarm": { class: "Warlock", ink: "Ink of Dreams" },
+            "Glyph of Impaling Throws": { class: "Warrior", ink: "Ink of Dreams" },
+            "Glyph of Improved Distraction": { class: "Rogue", ink: "Ink of Dreams" },
+            "Glyph of Incite": { class: "Warrior", ink: "Ink of Dreams" },
+            "Glyph of Inferno Blast": { class: "Mage", ink: "Ink of Dreams" },
+            "Glyph of Inner Fire": { class: "Priest", ink: "Ink of Dreams" },
+            "Glyph of Inner Sanctum": { class: "Priest", ink: "Ink of Dreams" },
+            "Glyph of Innervate": { class: "Druid", ink: "Ink of Dreams" },
+            "Glyph of Inquisition": { class: "Paladin", ink: "Ink of Dreams" },
+            "Glyph of Inspired Hymns": { class: "Priest", ink: "Ink of Dreams" },
+            "Glyph of Intimidating Shout": { class: "Warrior", ink: "Ink of Dreams" },
+            "Glyph of Jab": { class: "Monk", ink: "Ink of Dreams" },
+            "Glyph of Kick": { class: "Monk", ink: "Ink of Dreams" },
+            "Glyph of Killing Spree": { class: "Rogue", ink: "Ink of Dreams" },
+            "Glyph of Lava Lash": { class: "Shaman", ink: "Ink of Dreams" },
+            "Glyph of Leap of Faith": { class: "Priest", ink: "Ink of Dreams" },
+            "Glyph of Leer of the Ox": { class: "Monk", ink: "Ink of Dreams" },
+            "Glyph of Lesser Proportion": { class: "Warlock", ink: "Ink of Dreams" },
+            "Glyph of Levitate": { class: "Priest", ink: "Ink of Dreams" },
+            "Glyph of Liberation": { class: "Hunter", ink: "Ink of Dreams" },
+            "Glyph of Life Cocoon": { class: "Monk", ink: "Ink of Dreams" },
+            "Glyph of Life Tap": { class: "Warlock", ink: "Ink of Dreams" },
+            "Glyph of Light of Dawn": { class: "Paladin", ink: "Ink of Dreams" },
+            "Glyph of Lightning Shield": { class: "Shaman", ink: "Ink of Dreams" },
+            "Glyph of Lightwell": { class: "Priest", ink: "Ink of Dreams" },
+            "Glyph of Lingering Ancestors": { class: "Shaman", ink: "Ink of Dreams" },
+            "Glyph of Long Charge": { class: "Warrior", ink: "Ink of Dreams" },
+            "Glyph of Loose Mana": { class: "Mage", ink: "Ink of Dreams" },
+            "Glyph of Mana Gem": { class: "Mage", ink: "Ink of Dreams" },
+            "Glyph of Mana Tea": { class: "Monk", ink: "Ink of Dreams" },
+            "Glyph of Marking": { class: "Hunter", ink: "Ink of Dreams" },
+            "Glyph of Mass Dispel": { class: "Priest", ink: "Ink of Dreams" },
+            "Glyph of Mass Exorcism": { class: "Paladin", ink: "Ink of Dreams" },
+            "Glyph of Master's Call": { class: "Hunter", ink: "Ink of Dreams" },
+            "Glyph of Maul": { class: "Druid", ink: "Ink of Dreams" },
+            "Glyph of Mend Pet": { class: "Hunter", ink: "Ink of Dreams" },
+            "Glyph of Mending": { class: "Priest", ink: "Ink of Dreams" },
+            "Glyph of Might of Ursoc": { class: "Druid", ink: "Ink of Dreams" },
+            "Glyph of Mighty Victory": { class: "Warrior", ink: "Ink of Dreams" },
+            "Glyph of Mind Blast": { class: "Priest", ink: "Ink of Dreams" },
+            "Glyph of Mind Flay": { class: "Priest", ink: "Ink of Dreams" },
+            "Glyph of Mind Freeze": { class: "Death Knight", ink: "Ink of Dreams" },
+            "Glyph of Mind Spike": { class: "Priest", ink: "Ink of Dreams" },
+            "Glyph of Mirror Image": { class: "Mage", ink: "Ink of Dreams" },
+            "Glyph of Mirrored Blades": { class: "Warrior", ink: "Ink of Dreams" },
+            "Glyph of Misdirection": { class: "Hunter", ink: "Ink of Dreams" },
+            "Glyph of Momentum": { class: "Rogue", ink: "Ink of Dreams" },
+            "Glyph of Mortal Strike": { class: "Warrior", ink: "Ink of Dreams" },
+            "Glyph of Mystic Shout": { class: "Warrior", ink: "Ink of Dreams" },
+            "Glyph of Nature's Grasp": { class: "Druid", ink: "Ink of Dreams" },
+            "Glyph of Nightmares": { class: "Warlock", ink: "Ink of Dreams" },
+            "Glyph of Nimble Brew": { class: "Monk", ink: "Ink of Dreams" },
+            "Glyph of No Escape": { class: "Hunter", ink: "Ink of Dreams" },
+            "Glyph of Omens": { class: "Druid", ink: "Ink of Dreams" },
+            "Glyph of Paralysis": { class: "Monk", ink: "Ink of Dreams" },
+            "Glyph of Path of Frost": { class: "Death Knight", ink: "Ink of Dreams" },
+            "Glyph of Penance": { class: "Priest", ink: "Ink of Dreams" },
+            "Glyph of Pestilence": { class: "Death Knight", ink: "Ink of Dreams" },
+            "Glyph of Pick Lock": { class: "Rogue", ink: "Ink of Dreams" },
+            "Glyph of Pick Pocket": { class: "Rogue", ink: "Ink of Dreams" },
+            "Glyph of Pillar of Frost": { class: "Death Knight", ink: "Ink of Dreams" },
+            "Glyph of Pillar of Light": { class: "Paladin", ink: "Ink of Dreams" },
+            "Glyph of Poisons": { class: "Rogue", ink: "Ink of Dreams" },
+            "Glyph of Polymorph": { class: "Mage", ink: "Ink of Dreams" },
+            "Glyph of Pounce": { class: "Druid", ink: "Ink of Dreams" },
+            "Glyph of Power Word: Shield": { class: "Priest", ink: "Ink of Dreams" },
+            "Glyph of Prayer of Mending": { class: "Priest", ink: "Ink of Dreams" },
+            "Glyph of Protector of the Innocent": { class: "Paladin", ink: "Ink of Dreams" },
+            "Glyph of Prowl": { class: "Druid", ink: "Ink of Dreams" },
+            "Glyph of Psychic Horror": { class: "Priest", ink: "Ink of Dreams" },
+            "Glyph of Psychic Scream": { class: "Priest", ink: "Ink of Dreams" },
+            "Glyph of Purge": { class: "Shaman", ink: "Ink of Dreams" },
+            "Glyph of Purging": { class: "Shaman", ink: "Ink of Dreams" },
+            "Glyph of Purify": { class: "Monk", ink: "Ink of Dreams" },
+            "Glyph of Raging Wind": { class: "Shaman", ink: "Ink of Dreams" },
+            "Glyph of Rain of Frogs": { class: "Shaman", ink: "Ink of Dreams" },
+            "Glyph of Rapid Displacement": { class: "Warlock", ink: "Ink of Dreams" },
+            "Glyph of Rapid Rolling": { class: "Monk", ink: "Ink of Dreams" },
+            "Glyph of Rapid Teleportation": { class: "Mage", ink: "Ink of Dreams" },
+            "Glyph of Rebirth": { class: "Druid", ink: "Ink of Dreams" },
+            "Glyph of Recklessness": { class: "Warrior", ink: "Ink of Dreams" },
+            "Glyph of Recovery": { class: "Rogue", ink: "Ink of Dreams" },
+            "Glyph of Recuperate": { class: "Rogue", ink: "Ink of Dreams" },
+            "Glyph of Redirect": { class: "Rogue", ink: "Ink of Dreams" },
+            "Glyph of Reflective Shield": { class: "Mage", ink: "Ink of Dreams" },
+            "Glyph of Regrowth": { class: "Druid", ink: "Ink of Dreams" },
+            "Glyph of Rejuvenation": { class: "Druid", ink: "Ink of Dreams" },
+            "Glyph of Remove Curse": { class: "Druid", ink: "Ink of Dreams" },
+            "Glyph of Renew": { class: "Priest", ink: "Ink of Dreams" },
+            "Glyph of Renewing Mist": { class: "Monk", ink: "Ink of Dreams" },
+            "Glyph of Resilient Grip": { class: "Death Knight", ink: "Ink of Dreams" },
+            "Glyph of Resonating Power": { class: "Shaman", ink: "Ink of Dreams" },
+            "Glyph of Revive Pet": { class: "Hunter", ink: "Ink of Dreams" },
+            "Glyph of Righteous Retreat": { class: "Paladin", ink: "Ink of Dreams" },
+            "Glyph of Riptide": { class: "Shaman", ink: "Ink of Dreams" },
+            "Glyph of Rising Tiger Kick": { class: "Monk", ink: "Ink of Dreams" },
+            "Glyph of Rude Interruption": { class: "Warrior", ink: "Ink of Dreams" },
+            "Glyph of Safe Fall": { class: "Rogue", ink: "Ink of Dreams" },
+            "Glyph of Savagery": { class: "Druid", ink: "Ink of Dreams" },
+            "Glyph of Scatter Shot": { class: "Hunter", ink: "Ink of Dreams" },
+            "Glyph of Scourge Imprisonment": { class: "Death Knight", ink: "Ink of Dreams" },
+            "Glyph of Seal of Blood": { class: "Paladin", ink: "Ink of Dreams" },
+            "Glyph of Shackle Undead": { class: "Priest", ink: "Ink of Dreams" },
+            "Glyph of Shadow": { class: "Priest", ink: "Ink of Dreams" },
+            "Glyph of Shadow Bolt": { class: "Warlock", ink: "Ink of Dreams" },
+            "Glyph of Shadow Ravens": { class: "Death Knight", ink: "Ink of Dreams" },
+            "Glyph of Shadow Walk": { class: "Rogue", ink: "Ink of Dreams" },
+            "Glyph of Shadow Word: Death": { class: "Priest", ink: "Ink of Dreams" },
+            "Glyph of Shadowy Friends": { class: "Warlock", ink: "Ink of Dreams" },
+            "Glyph of Shamanistic Rage": { class: "Shaman", ink: "Ink of Dreams" },
+            "Glyph of Sharpened Knives": { class: "Rogue", ink: "Ink of Dreams" },
+            "Glyph of Shield Slam": { class: "Warrior", ink: "Ink of Dreams" },
+            "Glyph of Shield Wall": { class: "Warrior", ink: "Ink of Dreams" },
+            "Glyph of Shifted Appearances": { class: "Druid", ink: "Ink of Dreams" },
+            "Glyph of Shifting Presences": { class: "Priest", ink: "Ink of Dreams" },
+            "Glyph of Shiv": { class: "Rogue", ink: "Ink of Dreams" },
+            "Glyph of Shred": { class: "Druid", ink: "Ink of Dreams" },
+            "Glyph of Siphon Life": { class: "Warlock", ink: "Ink of Dreams" },
+            "Glyph of Skull Bash": { class: "Druid", ink: "Ink of Dreams" },
+            "Glyph of Slow": { class: "Mage", ink: "Ink of Dreams" },
+            "Glyph of Smite": { class: "Priest", ink: "Ink of Dreams" },
+            "Glyph of Smoke Bomb": { class: "Rogue", ink: "Ink of Dreams" },
+            "Glyph of Snake Trap": { class: "Hunter", ink: "Ink of Dreams" },
+            "Glyph of Soul Consumption": { class: "Warlock", ink: "Ink of Dreams" },
+            "Glyph of Soul Swap": { class: "Warlock", ink: "Ink of Dreams" },
+            "Glyph of Soulstone": { class: "Warlock", ink: "Ink of Dreams" },
+            "Glyph of Soulwell": { class: "Warlock", ink: "Ink of Dreams" },
+            "Glyph of Spell Reflection": { class: "Warrior", ink: "Ink of Dreams" },
+            "Glyph of Spellsteal": { class: "Mage", ink: "Ink of Dreams" },
+            "Glyph of Spinning Crane Kick": { class: "Monk", ink: "Ink of Dreams" },
+            "Glyph of Spinning Fire Blossom": { class: "Monk", ink: "Ink of Dreams" },
+            "Glyph of Spirit of Redemption": { class: "Priest", ink: "Ink of Dreams" },
+            "Glyph of Spirit Raptors": { class: "Shaman", ink: "Ink of Dreams" },
+            "Glyph of Spirit Roll": { class: "Monk", ink: "Ink of Dreams" },
+            "Glyph of Spirit Walk": { class: "Shaman", ink: "Ink of Dreams" },
+            "Glyph of Spirit Wolf": { class: "Shaman", ink: "Ink of Dreams" },
+            "Glyph of Spiritwalker's Grace": { class: "Shaman", ink: "Ink of Dreams" },
+            "Glyph of Sprint": { class: "Rogue", ink: "Ink of Dreams" },
+            "Glyph of Stampede": { class: "Hunter", ink: "Ink of Dreams" },
+            "Glyph of Stampeding Roar": { class: "Druid", ink: "Ink of Dreams" },
+            "Glyph of Stealth": { class: "Rogue", ink: "Ink of Dreams" },
+            "Glyph of Strangulate": { class: "Death Knight", ink: "Ink of Dreams" },
+            "Glyph of Subjugate Demon": { class: "Warlock", ink: "Ink of Dreams" },
+            "Glyph of Subtlety": { class: "Rogue", ink: "Ink of Dreams" },
+            "Glyph of Supernova": { class: "Mage", ink: "Ink of Dreams" },
+            "Glyph of Surging Mist": { class: "Monk", ink: "Ink of Dreams" },
+            "Glyph of Survival Instincts": { class: "Druid", ink: "Ink of Dreams" },
+            "Glyph of Sweeping Strikes": { class: "Warrior", ink: "Ink of Dreams" },
+            "Glyph of Swift Death": { class: "Death Knight", ink: "Ink of Dreams" },
+            "Glyph of Tame Beast": { class: "Hunter", ink: "Ink of Dreams" },
+            "Glyph of Targeted Expulsion": { class: "Warlock", ink: "Ink of Dreams" },
+            "Glyph of Templar's Verdict": { class: "Paladin", ink: "Ink of Dreams" },
+            "Glyph of the Alabaster Shield": { class: "Paladin", ink: "Ink of Dreams" },
+            "Glyph of the Battle Healer": { class: "Warrior", ink: "Ink of Dreams" },
+            "Glyph of the Bear Cub": { class: "Druid", ink: "Ink of Dreams" },
+            "Glyph of the Blazing Trail": { class: "Monk", ink: "Ink of Dreams" },
+            "Glyph of the Chameleon": { class: "Hunter", ink: "Ink of Dreams" },
+            "Glyph of the Cheetah": { class: "Hunter", ink: "Ink of Dreams" },
+            "Glyph of the Compy": { class: "Hunter", ink: "Ink of Dreams" },
+            "Glyph of the Executor": { class: "Death Knight", ink: "Ink of Dreams" },
+            "Glyph of the Exorcist": { class: "Paladin", ink: "Ink of Dreams" },
+            "Glyph of the Falling Avenger": { class: "Paladin", ink: "Ink of Dreams" },
+            "Glyph of the Geist": { class: "Death Knight", ink: "Ink of Dreams" },
+            "Glyph of the Headhunter": { class: "Hunter", ink: "Ink of Dreams" },
+            "Glyph of the Heavens": { class: "Paladin", ink: "Ink of Dreams" },
+            "Glyph of the Lakestrider": { class: "Druid", ink: "Ink of Dreams" },
+            "Glyph of the Lean Pack": { class: "Hunter", ink: "Ink of Dreams" },
+            "Glyph of the Long Winter": { class: "Mage", ink: "Ink of Dreams" },
+            "Glyph of the Luminous Charger": { class: "Paladin", ink: "Ink of Dreams" },
+            "Glyph of the Master Shapeshifter": { class: "Druid", ink: "Ink of Dreams" },
+            "Glyph of the Monkey": { class: "Monk", ink: "Ink of Dreams" },
+            "Glyph of the Mounted King": { class: "Warrior", ink: "Ink of Dreams" },
+            "Glyph of the Orca": { class: "Shaman", ink: "Ink of Dreams" },
+            "Glyph of the Penguin": { class: "Mage", ink: "Ink of Dreams" },
+            "Glyph of the Porcupine": { class: "Hunter", ink: "Ink of Dreams" },
+            "Glyph of the Predator": { class: "Hunter", ink: "Ink of Dreams" },
+            "Glyph of the Raging Whirlwind": { class: "Warrior", ink: "Ink of Dreams" },
+            "Glyph of the Sha": { class: "Monk", ink: "Ink of Dreams" },
+            "Glyph of the Skeleton": { class: "Death Knight", ink: "Ink of Dreams" },
+            "Glyph of the Stag": { class: "Druid", ink: "Ink of Dreams" },
+            "Glyph of the Subtle Defender": { class: "Warrior", ink: "Ink of Dreams" },
+            "Glyph of the Treant": { class: "Druid", ink: "Ink of Dreams" },
+            "Glyph of the Val'kyr": { class: "Priest", ink: "Ink of Dreams" },
+            "Glyph of the Watchful Eye": { class: "Warlock", ink: "Ink of Dreams" },
+            "Glyph of the Weaponmaster": { class: "Warrior", ink: "Ink of Dreams" },
+            "Glyph of Thunder": { class: "Shaman", ink: "Ink of Dreams" },
+            "Glyph of Thunder Strike": { class: "Shaman", ink: "Ink of Dreams" },
+            "Glyph of Thunderstorm": { class: "Shaman", ink: "Ink of Dreams" },
+            "Glyph of Totemic Encirclement": { class: "Shaman", ink: "Ink of Dreams" },
+            "Glyph of Totemic Recall": { class: "Shaman", ink: "Ink of Dreams" },
+            "Glyph of Totemic Vigor": { class: "Shaman", ink: "Ink of Dreams" },
+            "Glyph of Touch of Death": { class: "Monk", ink: "Ink of Dreams" },
+            "Glyph of Touch of Karma": { class: "Monk", ink: "Ink of Dreams" },
+            "Glyph of Tranquil Grip": { class: "Death Knight", ink: "Ink of Dreams" },
+            "Glyph of Tranquilizing Shot": { class: "Hunter", ink: "Ink of Dreams" },
+            "Glyph of Transcendence": { class: "Monk", ink: "Ink of Dreams" },
+            "Glyph of Tricks of the Trade": { class: "Rogue", ink: "Ink of Dreams" },
+            "Glyph of Unending Breath": { class: "Warlock", ink: "Ink of Dreams" },
+            "Glyph of Unending Rage": { class: "Warrior", ink: "Ink of Dreams" },
+            "Glyph of Unending Resolve": { class: "Warlock", ink: "Ink of Dreams" },
+            "Glyph of Unholy Command": { class: "Death Knight", ink: "Ink of Dreams" },
+            "Glyph of Unholy Frenzy": { class: "Death Knight", ink: "Ink of Dreams" },
+            "Glyph of Unstable Affliction": { class: "Warlock", ink: "Ink of Dreams" },
+            "Glyph of Unstable Earth": { class: "Shaman", ink: "Ink of Dreams" },
+            "Glyph of Vampiric Blood": { class: "Death Knight", ink: "Ink of Dreams" },
+            "Glyph of Vampiric Embrace": { class: "Priest", ink: "Ink of Dreams" },
+            "Glyph of Vanish": { class: "Rogue", ink: "Ink of Dreams" },
+            "Glyph of Vendetta": { class: "Rogue", ink: "Ink of Dreams" },
+            "Glyph of Verdant Spheres": { class: "Warlock", ink: "Ink of Dreams" },
+            "Glyph of Victorious Throw": { class: "Warrior", ink: "Ink of Dreams" },
+            "Glyph of Victory Rush": { class: "Warrior", ink: "Ink of Dreams" },
+            "Glyph of Water Elemental": { class: "Mage", ink: "Ink of Dreams" },
+            "Glyph of Water Roll": { class: "Monk", ink: "Ink of Dreams" },
+            "Glyph of Water Shield": { class: "Shaman", ink: "Ink of Dreams" },
+            "Glyph of Weakened Soul": { class: "Priest", ink: "Ink of Dreams" },
+            "Glyph of Whirlwind": { class: "Warrior", ink: "Ink of Dreams" },
+            "Glyph of Wild Growth": { class: "Druid", ink: "Ink of Dreams" },
+            "Glyph of Wind Shear": { class: "Shaman", ink: "Ink of Dreams" },
+            "Glyph of Word of Glory": { class: "Paladin", ink: "Ink of Dreams" },
+            "Glyph of Zen Meditation": { class: "Monk", ink: "Ink of Dreams" }
+        };
+
+        // Group glyphs by class for easy display
+        const glyphsByClass = {};
+        for (const glyphName in glyphRecipes) {
+            const { class: glyphClass, ink } = glyphRecipes[glyphName];
+            if (!glyphsByClass[glyphClass]) {
+                glyphsByClass[glyphClass] = [];
+            }
+            glyphsByClass[glyphClass].push({ name: glyphName, ink: ink });
+        }
+        const allClasses = Object.keys(glyphsByClass).sort();
+
+        // Object to store current prices from user input or import
+        const prices = {};
+        allHerbs.concat(allInks).forEach(item => prices[item] = 0);
+        for (const glyphName in glyphRecipes) {
+            prices[glyphName] = 0;
+        }
+
+        // Object to store the calculated cheapest cost for each ink
+        const inkCosts = {};
+
+        // --- DOM GENERATION FUNCTIONS ---
+
+        /**
+         * Dynamically creates the input fields for all herbs.
+         */
+        function generateHerbInputs() {
+            const container = document.getElementById('herb-inputs');
+            container.innerHTML = '';
+            herbMillingData.forEach(herb => {
+                const id = `price${herb.name.replace(/[^a-zA-Z0-9]/g, '')}`;
+                const inputHtml = `
+                    <div class="input-group flex flex-col gap-2">
+                        <label for="${id}" class="mb-1 text-sm font-medium">${herb.name} (AH Price):</label>
+                        <div class="flex items-center">
+                            <input type="number" id="${id}" class="px-3 py-2 rounded-lg w-full" min="0" value="0">
+                            <span id="millingCost${id}" class="ml-4 text-xs text-gray-400 whitespace-nowrap tooltip">
+                                Est. Milling Cost (1 Ink): 0.00 G
+                                <span class="tooltiptext">Cost to mill enough herbs to craft one ink.</span>
+                            </span>
+                        </div>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', inputHtml);
+                document.getElementById(id).addEventListener('input', updateCalculator);
+            });
+        }
+
+        /**
+         * Dynamically creates the input fields for all inks.
+         */
+        function generateInkInputs() {
+            const container = document.getElementById('ink-inputs');
+            container.innerHTML = '';
+            allInks.forEach(ink => {
+                const id = `price${ink.replace(/[^a-zA-Z0-9]/g, '')}`;
+                const inputHtml = `
+                    <div class="input-group flex flex-col gap-2">
+                        <label for="${id}" class="mb-1 text-sm font-medium">${ink} (AH Price):</label>
+                        <div class="flex items-center">
+                            <input type="number" id="${id}" class="px-3 py-2 rounded-lg w-full" min="0" value="0">
+                            <span id="cheapestInkCost${id}" class="ml-4 text-xs text-gray-400 whitespace-nowrap tooltip">
+                                Cheapest Cost: 0.00 G
+                                <span class="tooltiptext">Calculated cost considering AH price, milling, and Ink of Dreams conversion.</span>
+                            </span>
+                        </div>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', inputHtml);
+                document.getElementById(id).addEventListener('input', updateCalculator);
+            });
+        }
+
+        /**
+         * Dynamically creates the collapsible sections for each class and their glyphs.
+         */
+        function generateGlyphSections() {
+            const container = document.getElementById('glyph-results');
+            container.innerHTML = '';
+
+            allClasses.forEach(className => {
+                const classGlyphs = glyphsByClass[className];
+                const classId = className.replace(/\s+/g, '');
+                const detailsHtml = `
+                    <details id="details-${classId}" class="card p-6" open>
+                        <summary class="text-2xl font-bold text-white mb-4">${className} Glyphs (${classGlyphs.length})</summary>
+                        <div id="glyphs-${classId}" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+                            <!-- Glyphs will be inserted here by JavaScript -->
+                        </div>
+                    </details>
+                `;
+                container.insertAdjacentHTML('beforeend', detailsHtml);
+
+                const glyphsContainer = document.getElementById(`glyphs-${classId}`);
+                classGlyphs.sort((a, b) => a.name.localeCompare(b.name)).forEach(glyph => {
+                    const id = `price${glyph.name.replace(/[^a-zA-Z0-9]/g, '')}`;
+                    const glyphHtml = `
+                        <div class="flex flex-col p-4 rounded-lg bg-gray-800 border border-gray-700 hover:border-blue-500 transition-colors duration-200">
+                            <label for="${id}" class="mb-1 text-sm font-bold text-white">${glyph.name}</label>
+                            <input type="number" id="${id}" class="px-3 py-2 rounded-lg w-full text-sm mb-2" min="0" value="0">
+                            <p class="text-xs text-gray-400">Required Ink: ${glyph.ink}</p>
+                            <p class="text-xs text-gray-400">Craft Cost: <span id="craftCost${id}">0.00 G</span></p>
+                            <p class="text-base font-bold mt-2">Profit: <span id="profit${id}" class="profit">0.00 G</span></p>
+                        </div>
+                    `;
+                    glyphsContainer.insertAdjacentHTML('beforeend', glyphHtml);
+                    document.getElementById(id).addEventListener('input', updateCalculator);
+                });
+            });
+        }
+
+        // --- CORE CALCULATOR LOGIC ---
+
+        /**
+         * Calculates the cheapest way to acquire each ink (from AH, milling, or conversion).
+         * This function is the core logic that informs the glyph profit calculations.
+         */
+        function calculateInkCosts() {
+            // 1. Get all current herb prices from the UI
+            const herbPrices = {};
+            herbMillingData.forEach(herb => {
+                const id = `price${herb.name.replace(/[^a-zA-Z0-9]/g, '')}`;
+                herbPrices[herb.name] = parseFloat(document.getElementById(id).value) || 0;
+            });
+
+            // 2. Get all current ink AH prices from the UI
+            allInks.forEach(ink => {
+                const id = `price${ink.replace(/[^a-zA-Z0-9]/g, '')}`;
+                prices[ink] = parseFloat(document.getElementById(id).value) || 0;
+            });
+
+            // 3. Calculate the cheapest milling cost for each pigment
+            const pigmentCosts = {};
+            herbMillingData.forEach(herb => {
+                if (herbPrices[herb.name] > 0) {
+                    herb.pigments.forEach(pigment => {
+                        const estimatedPigmentYield = herb.pigments.reduce((sum, p) => sum + p.rate, 0);
+                        if (estimatedPigmentYield > 0) {
+                            const costPerPigmentFromHerb = herbPrices[herb.name] / estimatedPigmentYield;
+                            if (!pigmentCosts[pigment.name] || costPerPigmentFromHerb < pigmentCosts[pigment.name]) {
+                                pigmentCosts[pigment.name] = costPerPigmentFromHerb;
+                            }
+                        }
+                    });
+                }
+            });
+
+            // 4. Calculate the crafting cost for each ink from the cheapest pigments
+            const inkCraftingCosts = {};
+            for (const pigmentName in pigmentToInkRecipes) {
+                if (pigmentCosts[pigmentName]) {
+                    const recipe = pigmentToInkRecipes[pigmentName];
+                    inkCraftingCosts[recipe.ink] = (pigmentCosts[pigmentName] * recipe.quantity);
+                }
+            }
+
+            // 5. Determine the absolute cheapest cost for each ink (AH vs. Milling vs. Conversion)
+            allInks.forEach(ink => {
+                let cheapest = Infinity;
+                let source = "N/A";
+
+                // Option A: Buy from AH
+                if (prices[ink] > 0) {
+                    cheapest = prices[ink];
+                    source = "AH";
+                }
+
+                // Option B: Craft from milling herbs
+                if (inkCraftingCosts[ink] && inkCraftingCosts[ink] > 0 && inkCraftingCosts[ink] < cheapest) {
+                    cheapest = inkCraftingCosts[ink];
+                    source = "Milling";
+                }
+
+                // Option C: Convert from Ink of Dreams (if applicable)
+                if (inkConversionRates["Ink of Dreams"].includes(ink) && prices["Ink of Dreams"] > 0) {
+                    const conversionCost = prices["Ink of Dreams"]; // 1:1 conversion
+                    if (conversionCost < cheapest) {
+                        cheapest = conversionCost;
+                        source = "Convert from MoP Ink";
+                    }
+                }
+                
+                inkCosts[ink] = cheapest === Infinity ? 0 : cheapest;
+
+                // Update UI for ink cheapest cost
+                const inkId = `price${ink.replace(/[^a-zA-Z0-9]/g, '')}`;
+                const cheapestInkCostSpan = document.getElementById(`cheapestInkCost${inkId}`);
+                if (cheapestInkCostSpan) {
+                    if (inkCosts[ink] > 0) {
+                        cheapestInkCostSpan.innerHTML = `Cheapest Cost: ${inkCosts[ink].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} G <span style="font-size: 0.75em; display:block;">(${source})</span>`;
+                    } else {
+                        cheapestInkCostSpan.textContent = "Cheapest Cost: N/A";
+                    }
+                }
+            });
+
+            // Update UI for herb milling costs
+            herbMillingData.forEach(herb => {
+                const id = `price${herb.name.replace(/[^a-zA-Z0-9]/g, '')}`;
+                const millingCostSpan = document.getElementById(`millingCost${id}`);
+                let estCostPerInk = 0;
+                let potentialInkFromHerb = null;
+
+                herb.pigments.forEach(pigment => {
+                    const inkRecipe = pigmentToInkRecipes[pigment.name];
+                    if (inkRecipe) {
+                        // Assuming 5 herbs for 2 pigments, and 2 pigments for 1 ink means 5 herbs for 1 ink
+                        const herbsPerInk = (1 / pigment.rate) * (inkRecipe.quantity || 1);
+                        const cost = herbPrices[herb.name] * herbsPerInk;
+
+                        if (cost > 0 && (estCostPerInk === 0 || cost < estCostPerInk)) {
+                            estCostPerInk = cost;
+                            potentialInkFromHerb = inkRecipe.ink;
+                        }
+                    }
+                });
+
+                if (millingCostSpan) {
+                    if (estCostPerInk > 0) {
+                        millingCostSpan.textContent = `Est. Milling Cost (1 ${potentialInkFromHerb || 'Ink'}): ${estCostPerInk.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} G`;
+                    } else {
+                        millingCostSpan.textContent = "Est. Milling Cost (1 Ink): N/A";
+                    }
+                }
+            });
+        }
+
+
+        /**
+         * The main update function. Recalculates all costs and profits based on current inputs.
+         */
+        function updateCalculator() {
+            calculateInkCosts(); // Step 1: Figure out the cheapest way to get ink
+
+            const minProfit = parseFloat(document.getElementById('min-profit').value) || 0;
+
+            // Step 2: Iterate through all glyphs and calculate profit
+            for (const glyphName in glyphRecipes) {
+                const id = `price${glyphName.replace(/[^a-zA-Z0-9]/g, '')}`;
+                const ahPriceInput = document.getElementById(id);
+                if (ahPriceInput) {
+                    prices[glyphName] = parseFloat(ahPriceInput.value) || 0;
+                }
+
+                const glyphInfo = glyphRecipes[glyphName];
+                const requiredInk = glyphInfo.ink;
+                const inkQuantity = glyphInfo.quantity || 1; 
+                
+                // Get the cheapest cost for the required ink
+                const inkCost = inkCosts[requiredInk];
+                
+                const craftCost = (inkCost * inkQuantity);
+                const profit = (prices[glyphName] * (1 - AH_CUT_PERCENTAGE)) - craftCost;
+
+                const craftCostSpan = document.getElementById(`craftCost${id}`);
+                const profitSpan = document.getElementById(`profit${id}`);
+                const glyphCard = ahPriceInput?.closest('div');
+
+                if (craftCostSpan) {
+                    craftCostSpan.textContent = `${craftCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} G`;
+                }
+
+                if (profitSpan) {
+                    profitSpan.textContent = `${profit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} G`;
+                    profitSpan.className = profit >= 0 ? 'profit' : 'loss';
+                }
+
+                if (glyphCard) {
+                    if (profit >= minProfit) {
+                        glyphCard.style.display = 'flex'; // Show if profit meets minimum
+                    } else {
+                        glyphCard.style.display = 'none'; // Hide otherwise
+                    }
+                }
+            }
+        }
+
+        // --- IMPORT / EXPORT LOGIC ---
+
+        /**
+         * Parses and imports Auctionator data into the calculator.
+         */
+        function importPrices() {
+            const importBox = document.getElementById('import-box');
+            const statusMessage = document.getElementById('import-status');
+            const lines = importBox.value.trim().split('\n');
+
+            const itemMap = new Map();
+            allHerbs.forEach(item => itemMap.set(item, document.getElementById(`price${item.replace(/[^a-zA-Z0-9]/g, '')}`)));
+            allInks.forEach(item => itemMap.set(item, document.getElementById(`price${item.replace(/[^a-zA-Z0-9]/g, '')}`)));
+            for (const glyphName in glyphRecipes) {
+                itemMap.set(glyphName, document.getElementById(`price${glyphName.replace(/[^a-zA-Z0-9]/g, '')}`));
+            }
+
+            let updatedCount = 0;
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i];
+                if (!line) continue;
+
+                try {
+                    const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                    const priceInCopper = parseInt(parts[0].replace(/"/g, ''), 10);
+                    const itemName = parts[1].replace(/"/g, '');
+
+                    if (itemMap.has(itemName)) {
+                        const inputElement = itemMap.get(itemName);
+                        const priceInGold = copperToGold(priceInCopper);
+                        inputElement.value = priceInGold.toFixed(2);
+                        updatedCount++;
+                    }
+                } catch (error) {
+                    console.error("Failed to parse line:", line, error);
+                }
+            }
+
+            statusMessage.textContent = `Successfully imported ${updatedCount} prices.`;
+            updateCalculator();
+        }
+
+        /**
+         * Creates and copies a list of all items to search for in Auctionator.
+         */
+        function copySearchString() {
+            const statusMessage = document.getElementById('import-status');
+            const itemsToSearch = [];
+            
+            // Add all herbs, inks, and glyphs to the search list
+            allHerbs.forEach(herb => itemsToSearch.push(herb));
+            allInks.forEach(ink => itemsToSearch.push(ink));
+            for (const glyphName in glyphRecipes) {
+                itemsToSearch.push(glyphName);
+            }
+
+            // Correctly format the search string for Auctionator based on user feedback
+            const searchString = `Inscription Items^"${itemsToSearch.join('"^"')}"`;
+
+            try {
+                const tempTextarea = document.createElement('textarea');
+                tempTextarea.value = searchString;
+                document.body.appendChild(tempTextarea);
+                tempTextarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(tempTextarea);
+                statusMessage.textContent = 'Auctionator shopping list copied to clipboard!';
+            } catch (err) {
+                console.error('Failed to copy text:', err);
+                statusMessage.textContent = 'Failed to copy search string.';
+            }
+        }
+
+        // --- INITIALIZATION ---
+
+        window.onload = function() {
+            generateHerbInputs();
+            generateInkInputs();
+            generateGlyphSections();
+
+            document.getElementById('import-btn').addEventListener('click', importPrices);
+            document.getElementById('copy-search-string-btn-instructions').addEventListener('click', copySearchString);
+            document.getElementById('min-profit').addEventListener('input', updateCalculator);
+
+            // Add event listeners to all newly created input fields
+            const allInputs = document.querySelectorAll('input[type="number"]');
+            allInputs.forEach(input => {
+                input.addEventListener('input', updateCalculator);
+            });
+
+            updateCalculator(); // Initial calculation on page load
+        };
+    </script>
+</body>
+</html>
