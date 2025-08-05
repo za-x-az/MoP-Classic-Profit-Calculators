@@ -258,10 +258,10 @@
                             <img src="${item.icon}" class="w-12 h-12 rounded-lg" onerror="this.onerror=null;this.src='https://placehold.co/48x48/161b22/c9d1d9?text=N/A';" alt="${item.name} icon">
                         </a>
                         <div class="flex flex-col flex-grow">
-                            <label for="price${item.name.replace(/\s+/g, '')}" class="mb-1 text-sm font-medium">
+                            <label for="price${item.name.replace(/\s|'|\//g, '')}" class="mb-1 text-sm font-medium">
                                 <a href="${item.wowheadUrl}" target="_blank" class="text-blue-400 hover:underline">${item.name}</a> Price:
                             </label>
-                            <input type="number" id="price${item.name.replace(/\s+/g, '')}" class="px-3 py-2 rounded-lg w-full" min="0" value="0">
+                            <input type="number" id="price${item.name.replace(/\s|'|\//g, '')}" class="px-3 py-2 rounded-lg w-full" min="0" value="0">
                         </div>
                     </div>
                 `;
@@ -331,6 +331,7 @@
             const profitResults = document.getElementById('profit-results');
             const numHerbs = parseFloat(document.getElementById('numHerbs').value) || 0;
             const MILLING_HERBS_PER_BATCH = 5;
+            const AH_TAX_RATE = 0.05; // 5% Auction House tax
 
             // Check if any price is set before calculating
             const isAnyPriceSet = [...document.querySelectorAll('input[type="number"]')].some(input => parseFloat(input.value) > 0);
@@ -371,11 +372,16 @@
                 const inkOfDreamsYield = shadowPigmentsYield / 2;
                 const starlightInkYield = mistyPigmentsYield / 2;
                 
+                // Calculate revenue after tax
                 const revenueFromPigments = (shadowPigmentsYield * shadowPigmentPrice) + (mistyPigmentsYield * mistyPigmentPrice);
-                const revenueFromInks = (inkOfDreamsYield * inkOfDreamsPrice) + (starlightInkYield * starlightInkPrice);
+                const afterTaxRevenuePigments = revenueFromPigments * (1 - AH_TAX_RATE);
                 
-                const profitFromPigments = revenueFromPigments - totalHerbCost;
-                const profitFromInks = revenueFromInks - totalHerbCost;
+                const revenueFromInks = (inkOfDreamsYield * inkOfDreamsPrice) + (starlightInkYield * starlightInkPrice);
+                const afterTaxRevenueInks = revenueFromInks * (1 - AH_TAX_RATE);
+                
+                // Calculate profit with tax subtracted
+                const profitFromPigments = afterTaxRevenuePigments - totalHerbCost;
+                const profitFromInks = afterTaxRevenueInks - totalHerbCost;
                 
                 const foolsCapHtml = `
                     <div class="card p-4 rounded-lg bg-[#21262d]">
@@ -386,12 +392,12 @@
                         <p class="text-sm">Cost to mill ${herbsToMill} herbs: <span class="font-bold text-white">${totalHerbCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span> Gold.</p>
                         <p class="text-sm mt-1">Average yield: ${shadowPigmentsYield.toFixed(2)} Shadow Pigments, ${mistyPigmentsYield.toFixed(2)} Misty Pigments.</p>
                         <div class="mt-4 pt-2">
-                            <p class="text-sm font-bold">Reselling Pigments:
+                            <p class="text-sm font-bold">Reselling Pigments (after AH tax):
                                 <span class="${profitFromPigments >= 0 ? 'profit' : 'loss'} ml-1">
                                     ${profitFromPigments.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Gold
                                 </span>
                             </p>
-                            <p class="text-sm font-bold mt-2">Crafting and Selling Inks:
+                            <p class="text-sm font-bold mt-2">Crafting and Selling Inks (after AH tax):
                                 <span class="${profitFromInks >= 0 ? 'profit' : 'loss'} ml-1">
                                     ${profitFromInks.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Gold
                                 </span>
@@ -413,11 +419,16 @@
                     const inkOfDreamsYield = shadowPigmentsYield / 2;
                     const starlightInkYield = mistyPigmentsYield / 2;
                     
+                    // Calculate revenue after tax
                     const revenueFromPigments = (shadowPigmentsYield * shadowPigmentPrice) + (mistyPigmentsYield * mistyPigmentPrice);
-                    const revenueFromInks = (inkOfDreamsYield * inkOfDreamsPrice) + (starlightInkYield * starlightInkPrice);
+                    const afterTaxRevenuePigments = revenueFromPigments * (1 - AH_TAX_RATE);
                     
-                    const profitFromPigments = revenueFromPigments - totalHerbCost;
-                    const profitFromInks = revenueFromInks - totalHerbCost;
+                    const revenueFromInks = (inkOfDreamsYield * inkOfDreamsPrice) + (starlightInkYield * starlightInkPrice);
+                    const afterTaxRevenueInks = revenueFromInks * (1 - AH_TAX_RATE);
+                    
+                    // Calculate profit with tax subtracted
+                    const profitFromPigments = afterTaxRevenuePigments - totalHerbCost;
+                    const profitFromInks = afterTaxRevenueInks - totalHerbCost;
 
                     const otherHerbHtml = `
                         <div class="card p-4 rounded-lg bg-[#21262d]">
@@ -428,12 +439,12 @@
                             <p class="text-sm">Cost to mill ${herbsToMill} herbs: <span class="font-bold text-white">${totalHerbCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span> Gold.</p>
                             <p class="text-sm mt-1">Average yield: ${shadowPigmentsYield.toFixed(2)} Shadow Pigments, ${mistyPigmentsYield.toFixed(2)} Misty Pigments.</p>
                             <div class="mt-4 pt-2">
-                                <p class="text-sm font-bold">Reselling Pigments:
+                                <p class="text-sm font-bold">Reselling Pigments (after AH tax):
                                     <span class="${profitFromPigments >= 0 ? 'profit' : 'loss'} ml-1">
                                         ${profitFromPigments.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Gold
                                     </span>
                                 </p>
-                                <p class="text-sm font-bold mt-2">Crafting and Selling Inks:
+                                <p class="text-sm font-bold mt-2">Crafting and Selling Inks (after AH tax):
                                     <span class="${profitFromInks >= 0 ? 'profit' : 'loss'} ml-1">
                                         ${profitFromInks.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Gold
                                     </span>
