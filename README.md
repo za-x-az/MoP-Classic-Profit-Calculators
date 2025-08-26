@@ -21,7 +21,7 @@ https://za-x-az.github.io/MoP-Classic-Profit-Calculators/IronPaw-Token/IronPaw_T
 https://za-x-az.github.io/MoP-Classic-Profit-Calculators/Milling/Milling.html  
 <br><br> Engineering:  
 https://za-x-az.github.io/MoP-Classic-Profit-Calculators//Engineering/Bolts_n_Stuff.html  
-<br><br>🚧WIP🚧 Glyphs:🚧WIP🚧 Use at your own risk! 
+<br><br>🚧WIP🚧 Glyphs:🚧WIP🚧 Use at your own risk!   
 https://za-x-az.github.io/MoP-Classic-Profit-Calculators/Inscription/Glyphs.html  
 
 
