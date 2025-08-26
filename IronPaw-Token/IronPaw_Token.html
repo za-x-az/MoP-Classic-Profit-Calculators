@@ -145,6 +145,15 @@
         <!-- Input Fields -->
         <!-- This container now stacks the two input sections vertically on all screen sizes -->
         <div class="grid gap-8 mb-8">
+            <!-- AH Cut Input -->
+            <div class="card p-6 rounded-lg shadow-lg">
+                <h2 class="text-2xl font-bold mb-4 text-white">Auction House Settings</h2>
+                <div class="input-group flex items-center space-x-2">
+                    <label for="ah-cut" class="mb-1 text-sm font-medium">Auction House Cut (%):</label>
+                    <input type="number" id="ah-cut" class="px-3 py-2 rounded-lg max-w-xs" min="0" max="100" value="5">
+                </div>
+            </div>
+
             <!-- Food Items Input -->
             <div class="card p-6 rounded-lg shadow-lg">
                 <h2 class="text-2xl font-bold mb-4 text-white">Food Item Prices (per item)</h2>
@@ -303,22 +312,19 @@
             });
 
             let updatedCount = 0;
-            // Iterate over each line to parse the data
             for (let i = 1; i < lines.length; i++) { // Start from 1 to skip the header
                 const line = lines[i];
                 if (!line) continue;
                 
                 try {
-                    // Split the line by commas, and handle quoted names
                     const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
                     const priceInCopper = parseInt(parts[0].replace(/"/g, ''), 10);
                     const itemName = parts[1].replace(/"/g, '');
                     
                     if (itemMap.has(itemName)) {
                         const inputElement = itemMap.get(itemName);
-                        // Convert copper to gold (10,000 copper = 1 gold)
                         const priceInGold = priceInCopper / 10000;
-                        inputElement.value = priceInGold.toFixed(2); // Set price to 2 decimal places
+                        inputElement.value = priceInGold.toFixed(2);
                         updatedCount++;
                     }
                 } catch (error) {
@@ -335,12 +341,10 @@
             const statusMessage = document.getElementById('import-status');
 
             try {
-                // Create a temporary textarea element to hold the string
                 const tempTextarea = document.createElement('textarea');
                 tempTextarea.value = searchString;
                 document.body.appendChild(tempTextarea);
                 tempTextarea.select();
-                // Use document.execCommand for better compatibility in iframes
                 document.execCommand('copy');
                 document.body.removeChild(tempTextarea);
 
@@ -355,6 +359,8 @@
         function updateCalculator() {
             const tokenCostResults = document.getElementById('token-cost-results');
             const profitResults = document.getElementById('profit-results');
+            const ahCutInput = document.getElementById('ah-cut');
+            const ahCutPercentage = parseFloat(ahCutInput.value) / 100 || 0.05; // Default to 5% if invalid
 
             let cheapestTokenCost = { name: "N/A", cost: Infinity, icon: "" };
             
@@ -397,40 +403,42 @@
             }
 
             // 3. Calculate the potential profit from reselling ingredients.
-            let highestResaleValue = { name: "N/A", value: 0, icon: "", wowheadUrl: "" };
+            let highestResale = { name: "N/A", grossValue: 0, netValue: 0, icon: "", wowheadUrl: "" };
             tokenItems.forEach(item => {
                 const price = parseFloat(document.getElementById(item.inputId).value) || 0;
-                if (price > highestResaleValue.value) {
-                    highestResaleValue.value = price;
-                    highestResaleValue.name = item.name;
-                    highestResaleValue.icon = item.icon;
-                    highestResaleValue.wowheadUrl = item.wowheadUrl;
+                const netPrice = price * (1 - ahCutPercentage); 
+                if (netPrice > highestResale.netValue) {
+                    highestResale.grossValue = price; 
+                    highestResale.netValue = netPrice;
+                    highestResale.name = item.name;
+                    highestResale.icon = item.icon;
+                    highestResale.wowheadUrl = item.wowheadUrl;
                 }
             });
             
-            // Calculate final profit only if we have valid costs
-            let grossProfit = 0;
-            if (cheapestTokenCost.cost !== Infinity && highestResaleValue.value > 0) {
-                grossProfit = highestResaleValue.value - cheapestTokenCost.cost;
+            // Calculate final net profit
+            let netProfit = 0;
+            if (cheapestTokenCost.cost !== Infinity && highestResale.netValue > 0) {
+                netProfit = highestResale.netValue - cheapestTokenCost.cost;
             }
 
-            // 4. Display the profit analysis results with more detail.
+            // 4. Display the profit analysis results.
             profitResults.innerHTML = '';
-            if (cheapestTokenCost.cost !== Infinity && highestResaleValue.value > 0) {
-                const profitClass = grossProfit >= 0 ? 'profit' : 'loss';
-                const profitText = grossProfit >= 0 ? 'Profit' : 'Loss';
+            if (cheapestTokenCost.cost !== Infinity && highestResale.netValue > 0) {
+                const profitClass = netProfit >= 0 ? 'profit' : 'loss';
+                const profitText = netProfit >= 0 ? 'Profit' : 'Loss';
                 const profitHtml = `
                     <p class="text-sm flex items-center">
                         The most valuable single item to buy with one token is 
-                        <img src="${highestResaleValue.icon}" class="w-12 h-12 rounded-full mx-2" onerror="this.onerror=null;this.src='https://placehold.co/48x48/161b22/c9d1d9?text=N/A';" alt="${highestResaleValue.name} icon">
-                        <a href="${highestResaleValue.wowheadUrl}" target="_blank" class="font-bold text-blue-400 hover:underline">${highestResaleValue.name}</a>, which can be resold for <span class="font-bold text-white">${highestResaleValue.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span> Gold.
+                        <img src="${highestResale.icon}" class="w-12 h-12 rounded-full mx-2" onerror="this.onerror=null;this.src='https://placehold.co/48x48/161b22/c9d1d9?text=N/A';" alt="${highestResale.name} icon">
+                        <a href="${highestResale.wowheadUrl}" target="_blank" class="font-bold text-blue-400 hover:underline">${highestResale.name}</a>, which has a gross resale value of <span class="font-bold text-white">${highestResale.grossValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span> Gold.
                     </p>
                     <p class="text-sm mt-2">The cost to acquire one token is <span class="font-bold text-white">${cheapestTokenCost.cost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span> Gold.</p>
-                    <p class="text-lg font-bold mt-2">Potential ${profitText}: <span class="${profitClass}">${grossProfit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span> Gold</p>
+                    <p class="text-lg font-bold mt-2">Potential ${profitText} (after ${(ahCutPercentage * 100).toFixed(0)}% AH cut): <span class="${profitClass}">${netProfit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span> Gold</p>
                 `;
                 profitResults.insertAdjacentHTML('beforeend', profitHtml);
             } else {
-                profitResults.innerHTML = '<p class="text-sm">Please enter all prices to see the full analysis.</p>';
+                profitResults.innerHTML = '<p class="text-sm">Please enter all prices and the AH cut to see the full analysis.</p>';
             }
         }
 
@@ -441,11 +449,13 @@
             document.getElementById('import-btn').addEventListener('click', importPrices);
             document.getElementById('copy-search-string-btn').addEventListener('click', copySearchString);
             
-            // Add listeners for all dynamically generated inputs
+            // Add listeners for all dynamically generated inputs and the new AH cut input
             const allInputs = document.querySelectorAll('input[type="number"]');
             allInputs.forEach(input => {
                 input.addEventListener('input', updateCalculator);
             });
+            document.getElementById('ah-cut').addEventListener('input', updateCalculator);
+            
             updateCalculator(); // Initial calculation on page load
         };
     </script>
