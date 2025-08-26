@@ -15,13 +15,13 @@ This project is made and maintained by Zaximus-MirageRaceway EU  <br><br>
 ### I am not responsible for any loss of gold or in-game resources resulting from errors, bugs, or incorrect calculations. Use at your own risk.  <br>
 
   
-<br><br> IronPaw Tokens:  OBS Do not account for AH cut yet. OBS  
+<br><br> IronPaw Tokens:  
 https://za-x-az.github.io/MoP-Classic-Profit-Calculators/IronPaw-Token/IronPaw_Token.html  
 <br><br> Milling:  
 https://za-x-az.github.io/MoP-Classic-Profit-Calculators/Milling/Milling.html  
 <br><br> Engineering:  
 https://za-x-az.github.io/MoP-Classic-Profit-Calculators//Engineering/Bolts_n_Stuff.html  
-<br><br>🚧WIP🚧 Glyphs:🚧WIP🚧  
+<br><br>🚧WIP🚧 Glyphs:🚧WIP🚧 Use at your own risk! 
 https://za-x-az.github.io/MoP-Classic-Profit-Calculators/Inscription/Glyphs.html  
 
 
