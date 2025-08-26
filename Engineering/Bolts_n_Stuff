@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MoP Engineering & Mining Profit Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0d1117;
+            color: #c9d1d9;
+        }
+        .container {
+            max-width: 1000px;
+        }
+        .input-group input, .input-group textarea {
+            background-color: #21262d;
+            border-color: #30363d;
+            color: #c9d1d9;
+        }
+        .card {
+            background-color: #161b22;
+            border: 1px solid #30363d;
+        }
+        .profit { color: #34d399; }
+        .loss { color: #f87171; }
+        .btn {
+            background-color: #30363d;
+            color: #c9d1d9;
+            border: 1px solid #444c56;
+            transition: all 0.2s;
+        }
+        .btn:hover { background-color: #444c56; }
+        .btn-primary {
+            background-color: #1a73e8;
+            color: #ffffff;
+            border: none;
+        }
+        .btn-primary:hover { background-color: #1764c9; }
+    </style>
+</head>
+<body class="p-6">
+    <div class="container mx-auto">
+        <h1 class="text-3xl font-bold mb-6 text-center text-white">WoW MoP Engineering & Mining Calculator</h1>
+
+        <!-- Instructions Section -->
+        <div class="card p-4 rounded-lg shadow-lg mb-8">
+            <h2 class="text-xl font-bold mb-2">Instructions</h2>
+            <div class="flex flex-col lg:flex-row items-center lg:items-start justify-between gap-4">
+                <p class="text-sm lg:w-1/2">
+                    Use this tool to find the most profitable way to craft engineering items. Follow the steps to import your server's prices from the Auctionator addon.
+                </p>
+                <div class="flex flex-col items-center justify-center p-4 rounded-lg bg-[#21262d] mt-4 lg:mt-0 lg:w-1/2">
+                    <p class="text-sm text-center">Click the button below to copy the shopping list for Auctionator.</p>
+                    <button id="copy-search-string-btn" class="btn px-4 py-2 rounded-lg font-bold text-sm mt-4 w-full">Copy Auctionator Shopping List</button>
+                    <p id="copy-status" class="text-xs text-center text-gray-400 mt-2"></p>
+                </div>
+            </div>
+            <details class="mt-4">
+                <summary class="cursor-pointer text-sm font-semibold text-blue-400 hover:underline">Click here for detailed instructions</summary>
+                <div class="space-y-4 pt-4">
+                    <p class="text-sm">Follow these steps to get live prices from your server into the calculator.</p>
+                    <ol class="list-decimal list-inside text-sm space-y-2 mt-2">
+                        <li><strong>Copy the Shopping List:</strong> Click the "Copy Auctionator Shopping List" button above.</li>
+                        <li><strong>Import to Auctionator:</strong> In-game, open the Auction House, go to the "Shopping" tab, click "Import," and paste the list.</li>
+                        <li><strong>Scan and Export:</strong> Select the new shopping list and let it scan. Once done, click "Export Results" and copy the text that appears.</li>
+                        <li><strong>Import to Calculator:</strong> Paste the copied text into the "Import Prices" box below and click the "Import Prices" button. The calculator will update automatically.</li>
+                    </ol>
+                </div>
+            </details>
+        </div>
+
+        <!-- Import Prices Section -->
+        <div class="card p-6 rounded-lg shadow-lg mb-8">
+            <h2 class="text-2xl font-bold mb-4 text-white">Import Prices</h2>
+            <div class="grid md:grid-cols-2 gap-4">
+                <textarea id="import-box" class="w-full h-32 px-3 py-2 rounded-lg text-sm input-group" placeholder="Paste your Auctionator data here..."></textarea>
+                <div class="flex flex-col justify-between">
+                    <button id="import-btn" class="btn btn-primary px-4 py-2 rounded-lg font-bold mb-2">Import Prices</button>
+                    <p class="text-sm text-gray-400 mt-2">
+                        Expected format:<br>
+                        "Price","Name","Item Level","Owned?","Available"<br>
+                        ...
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Item Prices Section -->
+        <div class="card p-6 rounded-lg shadow-lg mb-8">
+            <h2 class="text-2xl font-bold mb-4 text-white">Item Prices (per item)</h2>
+            <div id="item-inputs" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Inputs will be generated here by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="grid lg:grid-cols-2 gap-8">
+            <!-- High-Explosive Gunpowder Analysis -->
+            <div class="card p-6 rounded-lg shadow-lg">
+                <h2 class="text-2xl font-bold mb-4 text-white flex items-center">
+                    <span class="text-4xl mr-3">💣</span> High-Explosive Gunpowder
+                </h2>
+                <p class="text-xs text-gray-400 mb-4">Recipe: 1 Ghost Iron Bar → 2 High-Explosive Gunpowder</p>
+                <div class="input-group mb-4">
+                    <label for="gunpowder-desired-items" class="mb-1 text-sm font-medium flex items-center">
+                        Total High-Explosive Gunpowder to Craft:
+                    </label>
+                    <input type="number" id="gunpowder-desired-items" class="w-full px-3 py-2 rounded-lg input-group" min="1" value="1" step="1">
+                </div>
+                <div id="gunpowder-results" class="space-y-4">
+                    <p class="text-sm">Enter prices and quantity to see profit analysis.</p>
+                </div>
+            </div>
+
+            <!-- Ghost Iron Bolts Analysis -->
+            <div class="card p-6 rounded-lg shadow-lg">
+                <h2 class="text-2xl font-bold mb-4 text-white flex items-center">
+                    <span class="text-4xl mr-3">🔩</span> Ghost Iron Bolts
+                </h2>
+                <p class="text-xs text-gray-400 mb-4">Recipe: 3 Ghost Iron Bars → 2 Ghost Iron Bolts</p>
+                <div class="input-group mb-4">
+                    <label for="bolts-desired-items" class="mb-1 text-sm font-medium flex items-center">
+                        Total Ghost Iron Bolts to Craft:
+                    </label>
+                    <input type="number" id="bolts-desired-items" class="w-full px-3 py-2 rounded-lg input-group" min="1" value="1" step="1">
+                </div>
+                <div id="bolts-results" class="space-y-4">
+                    <p class="text-sm">Enter prices and quantity to see profit analysis.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA ---
+        const searchString = 'MoP Engineering^"Ghost Iron Ore";;0;0;0;0;0;0;0;0;;#;;^"Ghost Iron Bar"^"High-Explosive Gunpowder"^"Ghost Iron Bolts"';
+        const items = [
+            { name: "Ghost Iron Ore", icon: '⛏️' },
+            { name: "Ghost Iron Bar", icon: '🍫' },
+            { name: "High-Explosive Gunpowder", icon: '💣' },
+            { name: "Ghost Iron Bolts", icon: '🔩' }
+        ];
+
+        // --- UTILITY FUNCTIONS ---
+        function formatGold(gold) {
+            if (isNaN(gold) || !isFinite(gold)) return '0c';
+            const sign = gold < 0 ? '-' : '';
+            gold = Math.abs(gold);
+            const g = Math.floor(gold);
+            const s = Math.floor((gold * 100) % 100);
+            const c = Math.round((gold * 10000) % 100);
+            let result = '';
+            if (g > 0) result += `${g}g `;
+            if (s > 0) result += `${s}s `;
+            if (c > 0 || result === '') result += `${c}c`;
+            return sign + result.trim();
+        }
+
+        // --- UI GENERATION ---
+        function generateInputs() {
+            const container = document.getElementById('item-inputs');
+            container.innerHTML = '';
+            items.forEach(item => {
+                const id = `price${item.name.replace(/\s+/g, '')}`;
+                const inputHtml = `
+                    <div class="input-group">
+                        <label for="${id}" class="mb-1 text-sm font-medium flex items-center">
+                            <span class="text-2xl mr-2">${item.icon}</span> ${item.name}
+                        </label>
+                        <input type="number" id="${id}" class="w-full px-3 py-2 rounded-lg input-group" min="0" value="0" step="0.01">
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', inputHtml);
+            });
+        }
+
+        // --- CORE LOGIC ---
+        function updateCalculator() {
+            const prices = {};
+            items.forEach(item => {
+                const id = `price${item.name.replace(/\s+/g, '')}`;
+                prices[item.name] = parseFloat(document.getElementById(id).value) || 0;
+            });
+
+            const ahCut = 0.95; // 5% Auction House cut
+            const orePrice = prices['Ghost Iron Ore'];
+            const barPrice = prices['Ghost Iron Bar'];
+            const gunpowderPrice = prices['High-Explosive Gunpowder'];
+            const boltsPrice = prices['Ghost Iron Bolts'];
+
+            // Get desired total items for craftable items
+            const desiredGunpowderItems = parseInt(document.getElementById('gunpowder-desired-items').value) || 1;
+            const desiredBoltsItems = parseInt(document.getElementById('bolts-desired-items').value) || 1;
+
+            // Define item recipes and yield for easier calculation
+            const recipes = {
+                'High-Explosive Gunpowder': {
+                    yieldsPerCraft: 2, // 1 bar crafts 2 gunpowder
+                    barsRequiredPerCraft: 1,
+                },
+                'Ghost Iron Bolts': {
+                    yieldsPerCraft: 2, // 3 bars crafts 2 bolts
+                    barsRequiredPerCraft: 3,
+                }
+            };
+
+            // --- High-Explosive Gunpowder Calculations ---
+            const gunpowderResults = document.getElementById('gunpowder-results');
+            gunpowderResults.innerHTML = '';
+
+            // Calculate crafts needed for gunpowder, always rounding up
+            const gunpowderCraftsNeeded = Math.ceil(desiredGunpowderItems / recipes['High-Explosive Gunpowder'].yieldsPerCraft);
+            const itemsToCraftGunpowder = gunpowderCraftsNeeded * recipes['High-Explosive Gunpowder'].yieldsPerCraft;
+            const totalBarsForGunpowder = gunpowderCraftsNeeded * recipes['High-Explosive Gunpowder'].barsRequiredPerCraft;
+            const totalOreForGunpowder = totalBarsForGunpowder * 2; // 2 ore per bar to smelt
+
+            // Scenario 1: Buy Bars for Gunpowder
+            const unitCostBuyBarsGunpowder = (barPrice * recipes['High-Explosive Gunpowder'].barsRequiredPerCraft) / recipes['High-Explosive Gunpowder'].yieldsPerCraft;
+            const totalCostBuyBarsGunpowder = unitCostBuyBarsGunpowder * itemsToCraftGunpowder;
+            const unitRevenueGunpowder = gunpowderPrice * ahCut;
+            const unitProfitBuyBarsGunpowder = unitRevenueGunpowder - unitCostBuyBarsGunpowder;
+            const totalProfitBuyBarsGunpowder = unitProfitBuyBarsGunpowder * itemsToCraftGunpowder;
+            renderDetailedResultCard(
+                gunpowderResults,
+                'Buy Bars',
+                itemsToCraftGunpowder,
+                gunpowderCraftsNeeded, // Pass crafts needed
+                unitCostBuyBarsGunpowder,
+                totalCostBuyBarsGunpowder,
+                unitProfitBuyBarsGunpowder,
+                totalProfitBuyBarsGunpowder,
+                { bars: totalBarsForGunpowder, ore: 0 } // No ore needed if buying bars
+            );
+
+            // Scenario 2: Smelt Ore for Gunpowder
+            const unitCostSmeltOreGunpowder = (orePrice * totalOreForGunpowder) / itemsToCraftGunpowder;
+            const totalCostSmeltOreGunpowder = unitCostSmeltOreGunpowder * itemsToCraftGunpowder;
+            const unitProfitSmeltOreGunpowder = unitRevenueGunpowder - unitCostSmeltOreGunpowder;
+            const totalProfitSmeltOreGunpowder = unitProfitSmeltOreGunpowder * itemsToCraftGunpowder;
+            renderDetailedResultCard(
+                gunpowderResults,
+                'Smelt Ore',
+                itemsToCraftGunpowder,
+                gunpowderCraftsNeeded, // Pass crafts needed
+                unitCostSmeltOreGunpowder,
+                totalCostSmeltOreGunpowder,
+                unitProfitSmeltOreGunpowder,
+                totalProfitSmeltOreGunpowder,
+                { bars: totalBarsForGunpowder, ore: totalOreForGunpowder } // Show bars and ore
+            );
+
+
+            // --- Ghost Iron Bolts Calculations ---
+            const boltsResults = document.getElementById('bolts-results');
+            boltsResults.innerHTML = '';
+
+            // Calculate crafts needed for bolts, always rounding up
+            const boltsCraftsNeeded = Math.ceil(desiredBoltsItems / recipes['Ghost Iron Bolts'].yieldsPerCraft);
+            const itemsToCraftBolts = boltsCraftsNeeded * recipes['Ghost Iron Bolts'].yieldsPerCraft;
+            const totalBarsForBolts = boltsCraftsNeeded * recipes['Ghost Iron Bolts'].barsRequiredPerCraft;
+            const totalOreForBolts = totalBarsForBolts * 2; // 2 ore per bar to smelt
+
+            // Scenario 1: Buy Bars for Bolts
+            const unitCostBuyBarsBolts = (barPrice * recipes['Ghost Iron Bolts'].barsRequiredPerCraft) / recipes['Ghost Iron Bolts'].yieldsPerCraft;
+            const totalCostBuyBarsBolts = unitCostBuyBarsBolts * itemsToCraftBolts;
+            const unitRevenueBolts = boltsPrice * ahCut;
+            const unitProfitBuyBarsBolts = unitRevenueBolts - unitCostBuyBarsBolts;
+            const totalProfitBuyBarsBolts = unitProfitBuyBarsBolts * itemsToCraftBolts;
+            renderDetailedResultCard(
+                boltsResults,
+                'Buy Bars',
+                itemsToCraftBolts,
+                boltsCraftsNeeded, // Pass crafts needed
+                unitCostBuyBarsBolts,
+                totalCostBuyBarsBolts,
+                unitProfitBuyBarsBolts,
+                totalProfitBuyBarsBolts,
+                { bars: totalBarsForBolts, ore: 0 }
+            );
+
+            // Scenario 2: Smelt Ore for Bolts
+            const unitCostSmeltOreBolts = (orePrice * totalOreForBolts) / itemsToCraftBolts;
+            const totalCostSmeltOreBolts = unitCostSmeltOreBolts * itemsToCraftBolts;
+            const unitProfitSmeltOreBolts = unitRevenueBolts - unitCostSmeltOreBolts;
+            const totalProfitSmeltOreBolts = unitProfitSmeltOreBolts * itemsToCraftBolts;
+            renderDetailedResultCard(
+                boltsResults,
+                'Smelt Ore',
+                itemsToCraftBolts,
+                boltsCraftsNeeded, // Pass crafts needed
+                unitCostSmeltOreBolts,
+                totalCostSmeltOreBolts,
+                unitProfitSmeltOreBolts,
+                totalProfitSmeltOreBolts,
+                { bars: totalBarsForBolts, ore: totalOreForBolts }
+            );
+        }
+
+        /**
+         * Renders a detailed result card for a crafting scenario.
+         * @param {HTMLElement} container - The DOM element to append the card to.
+         * @param {string} title - The title of the scenario (e.g., "Buy Bars", "Smelt Ore").
+         * @param {number} itemsToCraft - The total number of items that will be crafted.
+         * @param {number} craftsNeeded - The number of crafting sessions needed.
+         * @param {number} unitCost - The material cost per single crafted item.
+         * @param {number} totalCost - The total material cost for all items crafted.
+         * @param {number} unitProfit - The profit per single crafted item (after AH cut).
+         * @param {number} totalProfit - The total profit for all items crafted (after AH cut).
+         * @param {object} materialsNeeded - An object containing bars and ore needed: `{ bars: number, ore: number }`.
+         */
+        function renderDetailedResultCard(container, title, itemsToCraft, craftsNeeded, unitCost, totalCost, unitProfit, totalProfit, materialsNeeded) {
+            const profitClass = totalProfit >= 0 ? 'profit' : 'loss';
+            let materialsHtml = '';
+            if (materialsNeeded.bars > 0) {
+                materialsHtml += `<p>Bars Needed: <span class="font-mono float-right">${materialsNeeded.bars}</span></p>`;
+            }
+            if (materialsNeeded.ore > 0) {
+                materialsHtml += `<p>Ore Needed: <span class="font-mono float-right">${materialsNeeded.ore}</span></p>`;
+            }
+
+            const cardHtml = `
+                <div class="bg-[#21262d] p-3 rounded-lg">
+                    <h4 class="font-bold text-md">${title}</h4>
+                    <div class="text-sm space-y-1 mt-1">
+                        <p>Total Items Crafted: <span class="font-mono float-right">${itemsToCraft}</span></p>
+                        <p>Crafts Needed: <span class="font-mono float-right">${craftsNeeded}</span></p>
+                        ${materialsHtml}
+                        <p>Unit Material Cost: <span class="font-mono float-right">${formatGold(unitCost)}</span></p>
+                        <p>Total Material Cost: <span class="font-mono float-right">${formatGold(totalCost)}</span></p>
+                        <p>Unit Profit (5% AH Cut): <span class="font-mono float-right ${unitProfit >= 0 ? 'profit' : 'loss'}">${formatGold(unitProfit)}</span></p>
+                        <p>Total Profit (5% AH Cut): <span class="font-mono float-right ${profitClass}">${formatGold(totalProfit)}</span></p>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', cardHtml);
+        }
+
+        // --- IMPORT LOGIC ---
+        function importPrices() {
+            const importBox = document.getElementById('import-box');
+            const lines = importBox.value.trim().split('\n');
+            const itemMap = new Map();
+            items.forEach(item => {
+                const id = `price${item.name.replace(/\s+/g, '')}`;
+                itemMap.set(item.name, document.getElementById(id));
+            });
+
+            let updatedCount = 0;
+            for (let i = 1; i < lines.length; i++) {
+                try {
+                    const parts = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                    const priceInCopper = parseInt(parts[0].replace(/"/g, ''), 10);
+                    const itemName = parts[1].replace(/"/g, '');
+                    if (itemMap.has(itemName)) {
+                        const priceInGold = priceInCopper / 10000;
+                        itemMap.get(itemName).value = priceInGold.toFixed(4);
+                        updatedCount++;
+                    }
+                } catch (e) {
+                    console.error("Failed to parse line:", lines[i], e);
+                }
+            }
+            updateCalculator();
+        }
+
+        function copySearchString() {
+            const statusMessage = document.getElementById('copy-status');
+            try {
+                const tempTextarea = document.createElement('textarea');
+                tempTextarea.value = searchString;
+                document.body.appendChild(tempTextarea);
+                tempTextarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(tempTextarea);
+                statusMessage.textContent = 'Shopping list copied!';
+                setTimeout(() => { statusMessage.textContent = ''; }, 3000);
+            } catch (err) {
+                statusMessage.textContent = 'Failed to copy.';
+            }
+        }
+
+        // --- INITIALIZATION ---
+        window.onload = function() {
+            generateInputs();
+            document.getElementById('import-btn').addEventListener('click', importPrices);
+            document.getElementById('copy-search-string-btn').addEventListener('click', copySearchString);
+            
+            // Add event listeners for all price inputs
+            const allPriceInputs = document.querySelectorAll('#item-inputs input');
+            allPriceInputs.forEach(input => {
+                input.addEventListener('input', updateCalculator);
+            });
+
+            // Add event listeners for the new desired items inputs
+            const gunpowderDesiredItemsInput = document.getElementById('gunpowder-desired-items');
+            if (gunpowderDesiredItemsInput) {
+                gunpowderDesiredItemsInput.addEventListener('input', updateCalculator);
+            }
+
+            const boltsDesiredItemsInput = document.getElementById('bolts-desired-items');
+            if (boltsDesiredItemsInput) {
+                boltsDesiredItemsInput.addEventListener('input', updateCalculator);
+            }
+            
+            // Initial calculation on page load
+            updateCalculator();
+        };
+    </script>
+</body>
+</html>
