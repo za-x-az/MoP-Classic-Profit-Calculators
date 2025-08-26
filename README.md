@@ -6,7 +6,7 @@ Images borrowed from WoWhead.com<br><br>
   
   
 If something is not working, or you have an idea for another calculator, hit me up in-game or raise an issue here on GitHub.  
-This project is made and maintained by Zaximus-MirageRaceway EU  <br><br>
+<br><br>
   
   
   
