@@ -1,4 +1,4 @@
-<h1 align="center"><strong>🚧 This Project Is A Work In Progress 🚧</strong></h1>  
+<h1 align="center"><strong>🚧 This Project Is no longer getting updates, and will be as is🚧</strong></h1>  
 
 Full Disclosure, this project is primarily made with the help of Google's Gemini, as I don't have the skills to do this myself.  
   
